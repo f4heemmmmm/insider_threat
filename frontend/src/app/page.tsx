@@ -1,103 +1,86 @@
-import Image from "next/image";
+// src/app/page.tsx
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { DashboardService } from '../services/dashboard.service';
+import { AlertService } from '../services/alert.service';
+import { IncidentService } from '../services/incident.service';
+import { StatCard } from '../components/ui/StatCard';
+import { AlertsTable } from '@/components/ui/AlertsTable';
+import { DashboardStats } from '../types/dashboard.types';
+import { Alert } from '../types/alert.types';
+import { Incident } from '../types/incident.types';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentAlerts, setRecentAlerts] = useState<Alert[]>([]);
+  const [recentIncidents, setRecentIncidents] = useState<Incident[]>([]);
+  const [loading, setLoading] = useState(true);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const [dashboardStats, alertsResponse, incidentsResponse] = await Promise.all([
+          DashboardService.getStats(),
+          AlertService.getAlerts(5), // Get 5 most recent alerts
+          IncidentService.getIncidents(5), // Get 5 most recent incidents
+        ]);
+
+        setStats(dashboardStats);
+        setRecentAlerts(alertsResponse.alerts);
+        setRecentIncidents(incidentsResponse.incidents);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-10">Loading dashboard data...</div>;
+  }
+
+  return (
+    <div>
+      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Insider Threat Monitoring Dashboard</h1>
+      
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <StatCard
+          title="Total Alerts"
+          value={stats?.totalAlerts || 0}
+          description="All detected security alerts"
+          href="/alerts"
+        />
+        <StatCard
+          title="Total Incidents"
+          value={stats?.totalIncidents || 0}
+          description="Security incidents under investigation"
+          href="/incidents"
+        />
+      </div>
+
+      {/* Recent Alerts */}
+      <div className="bg-white shadow rounded-lg mb-8">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900">Recent Alerts</h2>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <div className="px-6 py-4">
+          <AlertsTable alerts={recentAlerts} />
+          {recentAlerts.length > 0 && (
+            <div className="mt-4 text-right">
+              <a href="/alerts" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                View all alerts
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
+
