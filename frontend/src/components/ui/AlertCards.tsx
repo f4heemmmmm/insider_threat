@@ -180,11 +180,6 @@ export const AlertCards: React.FC<AlertCardsProps> = ({ alerts, loading = false 
                     </div>
                   </div>
                 )}
-                
-                {/* Click hint */}
-                <div className="text-right mt-2 text-xs text-indigo-600">
-                  Click to view details
-                </div>
               </div>
             </div>
           );
