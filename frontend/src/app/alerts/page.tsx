@@ -6,8 +6,10 @@ import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 // Alert Imports
 import { Alert } from "../../types/alert.types";
-import { AlertCards } from "@/components/ui/AlertCards";
 import { AlertService, SortField, SortOrder } from "@/services/alert.service";
+
+// Component Imports
+import { AlertCards } from "@/components/ui/AlertCards";
 
 export default function AlertsPage() {
     const [limit] = useState(10);

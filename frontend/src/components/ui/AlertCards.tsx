@@ -87,11 +87,7 @@ export const AlertCards: React.FC<AlertCardsProps> = ({ alerts, loading = false 
               key={alert.ID}
               id={`alert-${alert.ID}`}
               className={`mb-6 bg-white rounded-lg shadow-sm overflow-hidden transition-all duration-200 border border-gray-200 
-                hover:shadow-md cursor-pointer transform hover:translate-y-[-2px] 
-                ${severity === 'critical' ? 'border-l-4 border-l-red-600' :
-                  severity === 'high' ? 'border-l-4 border-l-orange-500' :
-                  severity === 'medium' ? 'border-l-4 border-l-amber-500' :
-                  'border-l-4 border-l-blue-500'}`}
+                hover:shadow-md cursor-pointer transform hover:translate-y-[-2px]`}
               onClick={() => openAlertModal(alert)}
             >
               {/* Alert Header */}

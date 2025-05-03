@@ -148,7 +148,7 @@ const AlertModal: React.FC<AlertModalProps> = ({
   const severityColor = getSeverityColor(severity);
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-opacity-30  backdrop-blur-md overflow-y-auto">
       <div 
         ref={modalRef}
         className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto"
@@ -211,21 +211,21 @@ const AlertModal: React.FC<AlertModalProps> = ({
                     {alert.MITRE_tactic && (
                       <div className="flex items-center text-sm">
                         <span className="font-medium text-black mr-1">MITRE Tactic:</span>
-                        <span className="text-gray-700 bg-gray-50 px-3 py-1 rounded-md inline-block">{alert.MITRE_tactic}</span>
+                        <span className="text-gray-700 font-light bg-gray-50 px-3 py-1 rounded-md inline-block">{alert.MITRE_tactic}</span>
                       </div>
                     )}
                     
                     {alert.MITRE_technique && (
                       <div className="flex items-center text-sm">
                         <span className="font-medium text-black mr-1">MITRE Technique:</span>
-                        <span className="text-gray-700 bg-gray-50 px-3 py-1 rounded-md inline-block">{alert.MITRE_technique}</span>
+                        <span className="text-gray-700 font-light bg-gray-50 px-3 py-1 rounded-md inline-block">{alert.MITRE_technique}</span>
                       </div>
                     )}
                     
                     {alert.Detection_model && (
                       <div className="flex items-center text-sm">
                         <span className="font-medium text-black mr-1">Detection Model:</span>
-                        <span className="text-gray-700 bg-gray-50 px-3 py-1 rounded-md inline-block">{alert.Detection_model}</span>
+                        <span className="text-gray-700 font-light bg-gray-50 px-3 py-1 rounded-md inline-block">{alert.Detection_model}</span>
                       </div>
                     )}
                   </div>
@@ -235,9 +235,9 @@ const AlertModal: React.FC<AlertModalProps> = ({
               {/* Description aligned with MITRE info */}
               {alert.Description && (
                 <div className="px-3">
-                  <div className="text-sm font-semibold mb-2">Description:</div>
-                  <p className="font-light text-gray-700 text-sm inline-block bg-gray-50 px-3 py-1.5 rounded-md">
-                    {alert.Description}
+                  <div className="text-sm text-black font-semibold mb-2">Description:</div>
+                  <p className="font-light text-gray-700 text-sm inline-block py-1.5 rounded-md">
+                    {alert.Description}.
                   </p>
                 </div>
               )}
