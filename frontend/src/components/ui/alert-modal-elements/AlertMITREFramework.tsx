@@ -1,4 +1,4 @@
-// src/components/ui/alert-modal-elements/AlertMITREFramework.tsx
+// frontend/src/components/ui/alert-modal-elements/AlertMITREFramework.tsx
 
 import React from "react";
 import { ExternalLink } from "lucide-react";

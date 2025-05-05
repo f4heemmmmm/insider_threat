@@ -1,18 +1,15 @@
-// src/components/ui/alert-modal-elements/AlertHeader.tsx
+// frontend/src/components/ui/alert-modal-elements/AlertHeader.tsx
 
 import React from 'react';
 import { Alert } from '@/types/alert.types';
 import { StatusBadge } from '../StatusBadge';
+import { AlertProps } from '@/constants/interface';
 import { Calendar, User, Clock } from 'lucide-react';
 
 // Function Imports
 import { getScoreSeverity, getSeverityColor } from '@/constants/functions';
 
-interface AlertHeaderProps {
-    alert: Alert;
-}
-
-export const AlertHeader: React.FC<AlertHeaderProps> = ({ alert }) => {
+export const AlertHeader: React.FC<AlertProps> = ({ alert }) => {
     const severity = getScoreSeverity(alert.score);
     const severityColor = getSeverityColor(severity);
 

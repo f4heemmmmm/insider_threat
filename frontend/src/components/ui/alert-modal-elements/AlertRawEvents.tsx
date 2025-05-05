@@ -1,4 +1,4 @@
-// src/components/ui/alert-modal-elements/AlertRawElements.tsx
+// frontend/src/components/ui/alert-modal-elements/AlertRawElements.tsx
 
 import React from "react";
 import RawEventsDisplay from "../RawEventsDisplay";

@@ -1,14 +1,11 @@
-// src/components/ui/alert-modal-elements/AlertIncidentStatus.tsx
+// frontend/src/components/ui/alert-modal-elements/AlertIncidentStatus.tsx
 
 import React from "react";
 import { AlertCircle } from "lucide-react";
 import { Alert } from "@/types/alert.types";
+import { AlertProps } from "@/constants/interface";
 
-interface AlertIncidentStatusProps {
-    alert: Alert;
-}
-
-export const AlertIncidentStatus: React.FC<AlertIncidentStatusProps> = ({ alert }) => {
+export const AlertIncidentStatus: React.FC<AlertProps> = ({ alert }) => {
     return (
         <div>
             <h4 className = "text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3 flex items-center">

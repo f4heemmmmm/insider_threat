@@ -1,4 +1,4 @@
-// src/ui/alert-modal-elements/AlertEvidence.tsx:
+// frontend/src/ui/alert-modal-elements/AlertEvidence.tsx:
 
 import React from "react";
 import { Alert } from "@/types/alert.types";

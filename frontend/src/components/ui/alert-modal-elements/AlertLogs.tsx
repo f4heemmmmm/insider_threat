@@ -1,4 +1,4 @@
-// src/components/ui/alert-modal-elements/AlertLogs.tsx
+// frontend/src/components/ui/alert-modal-elements/AlertLogs.tsx
 import React from "react";
 import { FileText } from "lucide-react";
 
