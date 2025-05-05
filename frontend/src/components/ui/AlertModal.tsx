@@ -4,9 +4,9 @@ import { Alert } from '../../types/alert.types';
 import { X } from 'lucide-react';
 import { AlertHeader } from './alert-modal-elements/AlertHeader';
 import { AlertEvidence } from './alert-modal-elements/AlertEvidence';
-import AlertIncidentStatus from './alert-modal-elements/AlertIncidentStatus';
+import { AlertIncidentStatus } from './alert-modal-elements/AlertIncidentStatus';
 import AlertMITREFramework from './alert-modal-elements/AlertMITREFramework';
-import AlertLogs from './alert-modal-elements/AlertLogs';
+import { AlertLogs } from './alert-modal-elements/AlertLogs';
 import AlertRawEvents from './alert-modal-elements/AlertRawEvents';
 
 interface AlertModalProps {
