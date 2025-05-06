@@ -1,0 +1,84 @@
+// frontend/src/components/ui/alert-modal-elements/AlertHeader.tsx
+
+import React from 'react';
+import { Alert } from '@/types/alert.types';
+import { StatusBadge } from '../StatusBadge';
+import { AlertProps } from '@/constants/interface';
+import { Calendar, User, Clock } from 'lucide-react';
+
+// Function Imports
+import { getScoreSeverity, getSeverityColor } from '@/constants/functions';
+
+export const AlertHeader: React.FC<AlertProps> = ({ alert }) => {
+    const severity = getScoreSeverity(alert.score);
+    const severityColor = getSeverityColor(severity);
+
+    return (
+        <div className="p-8">
+            <div className="flex justify-between items-start">
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">{alert.alert_name}</h3>
+                <div className={`flex items-center ${severityColor}`}>
+                    <span className="font-semibold text-2xl">{alert.score}</span> <span className="text-sm">/10</span>
+                    <div className="ml-2">
+                        <StatusBadge status={severity} />
+                    </div>
+                </div>
+            </div>
+
+            {/* User and timestamp information - consistently aligned */}
+            <div className="flex flex-col gap-4 mt-4">
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-center text-sm font-light text-gray-600">
+                        <User className="h-4 w-4 mr-2 text-gray-500" />
+                        <span className="w-24 font-medium text-gray-700">User:</span>
+                        <span>{alert.user}</span>
+                    </div>
+                    <div className="flex items-center text-sm font-light text-gray-600">
+                        <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                        <span className="w-24 font-medium text-gray-700">Date:</span>
+                        <span>{new Date(alert.datestr).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center text-sm font-light text-gray-600">
+                        <Clock className="h-4 w-4 mr-2 text-gray-500" />
+                        <span className="w-24 font-medium text-gray-700">Time:</span>
+                        <span>{new Date(alert.datestr).toLocaleTimeString()}</span>
+                    </div>
+                </div>
+
+                {/* Alert details - consistently aligned */}
+                {(alert.MITRE_tactic || alert.MITRE_technique || alert.Detection_model || alert.Description) && (
+                    <div className="mt-4">
+                        <div className="flex flex-col gap-3">
+                            {alert.MITRE_tactic && (
+                                <div className="flex items-center text-sm">
+                                    <span className="w-32 font-medium text-gray-700">MITRE Tactic:</span>
+                                    <span className="text-gray-700 font-light bg-gray-50 px-3 py-1 rounded-md">{alert.MITRE_tactic}</span>
+                                </div>
+                            )}
+                            {alert.MITRE_technique && (
+                                <div className="flex items-center text-sm">
+                                    <span className="w-32 font-medium text-gray-700">MITRE Technique:</span>
+                                    <span className="text-gray-700 font-light bg-gray-50 px-3 py-1 rounded-md">{alert.MITRE_technique}</span>
+                                </div>
+                            )}
+                            {alert.Detection_model && (
+                                <div className="flex items-center text-sm">
+                                    <span className="w-32 font-medium text-gray-700">Detection Model:</span>
+                                    <span className="text-gray-700 font-light bg-gray-50 px-3 py-1 rounded-md">{alert.Detection_model}</span>
+                                </div>
+                            )}
+                        </div>
+                        
+                        {/* Description - handled differently since it might be longer */}
+                        {alert.Description && (
+                            <div className="mt-3">
+                                <p className="text-sm text-gray-700 font-medium mb-2">Description:</p>
+                                <p className="font-light text-gray-700 text-sm py-1.5 rounded-md">{alert.Description}.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
