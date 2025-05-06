@@ -1,7 +1,6 @@
 // src/components/ui/AlertModal.tsx
 
 import { X } from "lucide-react";
-import { Alert } from "@/types/alert.types";
 import React, { useEffect, useRef } from "react";
 import { AlertModalProps } from "@/constants/interface";
 

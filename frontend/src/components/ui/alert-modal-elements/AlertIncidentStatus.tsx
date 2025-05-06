@@ -28,11 +28,11 @@ export const AlertIncidentStatus: React.FC<AlertProps> = ({ alert }) => {
                     <div className = "space-y-3 text-sm mt-2">
                         <div className = "flex items-center justify-between">
                             <span className = "text-gray-600 w-1/2"> Created </span>
-                            <span className = "font-medium text-gray-400"> {new Date(alert.created_at).toLocaleString()} </span>
+                            <span className = "text-xs font-semibold text-gray-500"> {new Date(alert.created_at).toLocaleString()} </span>
                         </div>
                         <div className = "flex items-center justify-between">
                             <span className = "text-gray-600 w-1/2"> Alert Occurence </span>
-                            <span className = "font-medium text-gray-400"> {new Date(alert.datestr).toLocaleString()} </span>
+                            <span className = "text-xs font-semibold text-gray-500"> {new Date(alert.datestr).toLocaleString()} </span>
                         </div>
                     </div>
                 )}

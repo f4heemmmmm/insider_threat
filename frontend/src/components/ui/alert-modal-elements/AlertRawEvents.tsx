@@ -1,7 +1,7 @@
 // frontend/src/components/ui/alert-modal-elements/AlertRawElements.tsx
 
 import React from "react";
-import RawEventsDisplay from "../RawEventsDisplay";
+import RawEventsDisplay from "./RawEventsDisplay";
 import { List, ChevronUp, ChevronDown } from "lucide-react";
 
 interface AlertRawEventsProps {
@@ -40,7 +40,7 @@ export const AlertRawEvents: React.FC<AlertRawEventsProps> = ({ evidence, alertI
                     }
                 </span>
             </h4>
-            <div className = "border rounded-md overflow-hidden bg-white shadow-sm">
+            <div className = "border rounded-md overflow-hidden bg-white shadow-xl">
                 <div className = "px-4 py-3 border-gray-200 flex justify-between items-center">
                     <h5 className = "text-sm font-medium text-gray-700"> Event Details </h5>
                     <button

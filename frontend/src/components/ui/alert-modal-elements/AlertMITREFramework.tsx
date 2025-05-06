@@ -16,7 +16,7 @@ export const AlertMITREFramework: React.FC<AlertProps> = ({ alert }) => {
                     <div className = "flex flex-col">
                         <span className = "font-medium text-gray-700 mb-2"> MITRE Tactic </span>
                         <div className = "flex items-center">
-                            <span className = "text-gray-600 bg-gray-50 px-3 py-1.5 rounded-md block w-full">
+                            <span className = "text-gray-600 bg-gray-200 px-3 py-1.5 rounded-md block w-full">
                                 {alert.MITRE_tactic || "N/A"}
                             </span>
                         </div>
@@ -24,7 +24,7 @@ export const AlertMITREFramework: React.FC<AlertProps> = ({ alert }) => {
                     <div className = "flex flex-col">
                         <span className = "font-medium text-gray-700 mb-2"> MITRE Technique </span>
                         <div className = "flex items-center">
-                            <span className = "text-gray-600 bg-gray-50 px-3 py-1.5 rounded-md block w-full">
+                            <span className = "text-gray-600 bg-gray-200 px-3 py-1.5 rounded-md block w-full">
                                 {alert.MITRE_technique || "N/A"}
                             </span>
                         </div>
@@ -32,7 +32,7 @@ export const AlertMITREFramework: React.FC<AlertProps> = ({ alert }) => {
                     <div className = "flex flex-col">
                         <span className = "font-medium text-gray-700 mb-2"> MITRE Tactic </span>
                         <div className = "flex items-center">
-                        <span className = "text-gray-600 bg-gray-50 px-3 py-1.5 rounded-md block w-full">
+                        <span className = "text-gray-600 bg-gray-200 px-3 py-1.5 rounded-md block w-full">
                             {alert.Detection_model ? `${alert.Detection_model}.` : "N/A"}
                         </span>
                         </div>
