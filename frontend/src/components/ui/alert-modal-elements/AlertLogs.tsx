@@ -8,13 +8,13 @@ interface AlertLogsProps {
 
 export const AlertLogs: React.FC<AlertLogsProps> = ({ logs }) => {
     return (
-        <div className = "px-6 pb-6">
+        <div>
             <h4 className = "text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3 flex items-center">
                 <FileText className = "h-4 w-4 mr-2 text-indigo-600" />
                 Logs
             </h4>
-            <div className = "bg-gray-800 text-gray-200 p-4 rounded-lg overflow-auto font-mono text-sm shadow-inner">
-                <pre className = "whitespace-pre-wrap"> {logs} </pre>
+            <div className = "bg-blue-950 p-4 rounded-md border border-gray-200 shadow-sm font-mono">
+                <span> {logs} </span>
             </div>
         </div>
     );

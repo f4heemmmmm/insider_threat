@@ -1,125 +1,113 @@
-// src/app/incidents/page.tsx
-'use client';
+// frontend/src/app/incidents/page.tsx
 
-import React, { useEffect, useState } from 'react';
-import { IncidentService } from '../../services/incident.service';
-import { IncidentsTable } from '@/components/ui/IncidentsTable';
-import { Incident } from '../../types/incident.types';
+"use client";
+
+import React, { useEffect, useState } from "react";
+
+// Components Import
+import { IncidentCard } from "@/components/incident-main-page/IncidentCard";
+import { renderPagination } from "@/components/incident-main-page/IncidentPagination";
+import { CardContent, CardHeader, Card, CardTitle } from "@/components/incident-main-page/CardComponents";
+
+// Alert Files Import
+import { Alert } from "@/types/alert.types";
+import { AlertService } from "@/services/alert.service";
+
+// Incident Files Import
+import { Incident } from "@/types/incident.types";
+import { IncidentService } from "@/services/incident.service";
+import { IncidentCardSkeleton } from "@/components/incident-main-page/SkeletonComponents";
 
 export default function IncidentsPage() {
-  const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+    const [limit] = useState(10);
+    const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
+    const totalPages = Math.ceil(total / limit);
+    const [loading, setLoading] = useState(true);
+    const [incidents, setIncidents] = useState<Incident[]>([]);
+    const [incidentAlerts, setIncidentAlerts] = useState<Map<string, Alert[]>>(new Map());
 
-  useEffect(() => {
-    const fetchIncidents = async () => {
-      try {
-        setLoading(true);
-        const offset = (page - 1) * limit;
-        const response = await IncidentService.getIncidents(limit, offset);
-        setIncidents(response.incidents);
-        setTotal(response.total);
-      } catch (error) {
-        console.error('Error fetching incidents:', error);
-      } finally {
-        setLoading(false);
-      }
+    useEffect(() => {
+        const fetchIncidents = async () => {
+            try {
+                setLoading(true);
+                const offset = (page - 1) * limit;
+                const response = await IncidentService.getIncidents(limit, offset);
+                setIncidents(response.incidents);
+                setTotal(response.total);
+
+                // Stores related alerts for each incident using AlertService
+                const alertsMap = new Map<string, Alert[]>();
+
+                for (const incident of response.incidents) {
+                    try {
+                        const alertsUnderIncident = await AlertService.getAlertsByIncidentID(
+                            incident.ID,
+                            "datestr",      // Sorts by date
+                            "desc"          // Sorts by date with the most recent ones first
+                        );
+                        alertsMap.set(incident.ID, alertsUnderIncident);
+                    } catch (error) {
+                        console.error(`Error fetching alerts for incident ${incident.ID}:`, error);
+                        alertsMap.set(incident.ID, []);
+                    }
+                }
+                setIncidentAlerts(alertsMap);
+            } catch (error) {
+                console.error("Error fetching incidents:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchIncidents();
+    }, [page, limit]);
+
+    const navigateToIncidentDetails = (incidentID: string) => {
+        window.location.href = `/incidents/${incidentID}`;
     };
 
-    fetchIncidents();
-  }, [page, limit]);
-
-  const totalPages = Math.ceil(total / limit);
-
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Incidents</h1>
-      </div>
-
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">All Incidents</h2>
-        </div>
-        <div className="px-6 py-4">
-          <IncidentsTable incidents={incidents} loading={loading} />
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6 mt-4">
-              <div className="flex-1 flex justify-between sm:hidden">
-                <button
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                  className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                    page === 1 ? 'text-gray-400 bg-gray-100' : 'text-gray-700 bg-white hover:bg-gray-50'
-                  }`}
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => setPage(Math.min(totalPages, page + 1))}
-                  disabled={page === totalPages}
-                  className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                    page === totalPages ? 'text-gray-400 bg-gray-100' : 'text-gray-700 bg-white hover:bg-gray-50'
-                  }`}
-                >
-                  Next
-                </button>
-              </div>
-              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+    return (
+        <div className = "container mx-auto px-4 py-8 w-full">
+            <div className = "flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
                 <div>
-                  <p className="text-sm text-gray-700">
-                    Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to{' '}
-                    <span className="font-medium">{Math.min(page * limit, total)}</span> of{' '}
-                    <span className="font-medium">{total}</span> results
-                  </p>
+                    <h1 className = "text-xl sm:text-2xl font-semibold tracking-tight text-gray-800 mb-2">
+                        <span className = "text-5xl font-light">{incidents.length}</span> Incidents Found
+                    </h1>
                 </div>
-                <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                    <button
-                      onClick={() => setPage(Math.max(1, page - 1))}
-                      disabled={page === 1}
-                      className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
-                        page === 1 ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
-                      }`}
-                    >
-                      <span className="sr-only">Previous</span>
-                      &larr;
-                    </button>
-                    {[...Array(totalPages)].map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setPage(i + 1)}
-                        className={`relative inline-flex items-center px-4 py-2 border ${
-                          page === i + 1
-                            ? 'bg-indigo-50 border-indigo-500 text-indigo-600'
-                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                        } text-sm font-medium`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => setPage(Math.min(totalPages, page + 1))}
-                      disabled={page === totalPages}
-                      className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
-                        page === totalPages ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
-                      }`}
-                    >
-                      <span className="sr-only">Next</span>
-                      &rarr;
-                    </button>
-                  </nav>
-                </div>
-              </div>
             </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
+            <Card className = "shadow-md border-gray-200">
+                <CardHeader className = "flex flex-row items-center justify-between pb-2 border-b border-gray-100">
+                    <CardTitle className = "text-xl font-semibold text-gray-800"> All Incidents </CardTitle>
+                    <div className = "flex items-center gap-2">
+                        {/* ADDITIONAL CONTROLS/FILTERS HERE */}
+                    </div>
+                </CardHeader>
+                <CardContent className = "p-4 sm:p-6">
+                    <div className = "space-y-2">
+                        {loading ? (
+                            Array.from({ length: limit }).map((_, index) => (
+                                <IncidentCardSkeleton key = {index} />
+                            ))
+                        ) : incidents.length === 0 ? (
+                            <div className = "text-center py-16 border border-dashed border-gray-200 rounded-lg">
+                                <p className = "text-gray-500 text-lg"> No incidents found </p>
+                            </div>
+                        ) : (
+                            // Render actual incidents
+                            incidents.map((incident) => (
+                                <IncidentCard
+                                    key = {incident.ID}
+                                    incident = {incident}
+                                    alerts = {incidentAlerts.get(incident.ID) || []}
+                                    onClick = {() => navigateToIncidentDetails(incident.ID)}
+                                />
+                            ))
+                        )}
+                    </div>
+                    {totalPages > 1 && renderPagination({page, totalPages, total, limit, setPage})}
+                </CardContent>
+            </Card>
+        </div>
+    )
+};

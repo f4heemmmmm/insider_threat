@@ -137,3 +137,35 @@ export const parseAppAccessEvents = (events: any): IndexedSharePointEvent[] => {
         return [{ error: `Global parsing error: ${error instanceof Error ? error.message : "Unknown error"}`, _originalIndex: 0 }];
     }
 };
+
+export const formatDate = (date: Date): string => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const monthShort = date.toLocaleString('default', { month: 'short' });
+    const year = date.getFullYear();
+    return `${day} ${monthShort} ${year}`;
+};
+
+export const formatDuration = (end: Date, start: Date): string => {
+    const diffMS = new Date(end).getTime() - new Date(start).getTime();
+    const seconds = Math.floor(diffMS / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    let result = "";
+    
+    if (days > 0) {
+        result += `${days}d `;
+    }
+    if (hours > 0 || days > 0) {
+        const remainingHours = hours % 24;
+        result += `${remainingHours}h `;
+    }
+    if (minutes > 0 || hours > 0 || days > 0) {
+        const remainingMinutes = minutes % 60;
+        result += `${remainingMinutes}m `;
+    }
+    const remainingSeconds = seconds % 60;
+    result += `${remainingSeconds}s`;
+    return result.trim();
+};

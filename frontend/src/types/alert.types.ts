@@ -11,6 +11,7 @@ export interface Alert {
     Detection_model: string;
     Description: string | null;
     isUnderIncident: boolean;
+    incidentID?: string; // Add this field
     created_at: Date;
     updated_at: Date;
 }

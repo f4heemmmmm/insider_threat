@@ -45,7 +45,7 @@ export default function Home() {
   }
 
   return (
-    <div>
+    <div className = "w-full p-8">
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">Insider Threat Monitoring Dashboard</h1>
       
       {/* Stats Cards */}

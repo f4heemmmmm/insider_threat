@@ -21,7 +21,7 @@ export default function RootLayout({
         <div className="min-h-screen bg-gray-100">
           <NavigationBar />
           <main className="py-10">
-            <div className="max-w-7xl mx-auto">
+            <div>
               {children}
             </div>
           </main>

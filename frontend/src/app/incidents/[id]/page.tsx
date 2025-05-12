@@ -78,6 +78,9 @@ export default function IncidentDetailPage() {
           setLoading(false);
           return;
         }
+
+        console.log("Incident:");
+        console.log(foundIncident);
         
         setIncident(foundIncident);
                                                   
@@ -312,7 +315,7 @@ export default function IncidentDetailPage() {
 
   if (!incident) {
     return (
-      <div className="text-center py-16 text-gray-500 bg-gray-50 rounded-md w-full">
+      <div className="text-center py-16 text-gray-500 bg-gray-50 rounded-md max-w-8xl">
         <h3 className="mt-2 text-lg font-medium text-gray-900">Incident not found</h3>
         <p className="mt-1 text-sm text-gray-500">The incident you're looking for doesn't exist or has been removed.</p>
         <div className="mt-6">
@@ -325,7 +328,7 @@ export default function IncidentDetailPage() {
   }
 
   return (
-    <div>
+    <div className = "p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Incident Details</h1>
         <Link href="/incidents" className="text-indigo-600 hover:text-indigo-900">

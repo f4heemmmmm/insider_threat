@@ -1,8 +1,10 @@
 // src/components/ui/StatusBadge.tsx
+// refactor
+
 import React from 'react';
 
 interface StatusBadgeProps {
-  status: 'low' | 'medium' | 'high' | 'critical';
+  status: 'low' | 'medium' | 'high' | 'critical' | "unknown";
   className?: string;
 }
 
@@ -17,7 +19,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = ''
         return 'bg-orange-100 text-orange-800';
       case 'critical':
         return 'bg-red-100 text-red-800';
-      default:
+        case "unknown":
+        return 'bg-gray-100 text-gray-800';      
+default:
         return 'bg-gray-100 text-gray-800';
     }
   };

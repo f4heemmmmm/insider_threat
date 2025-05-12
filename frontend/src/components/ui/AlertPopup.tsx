@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Alert } from '../../types/alert.types';
 import { StatusBadge } from './StatusBadge';
-import RawEventsDisplay from './RawEventsDisplay';
+import RawEventsDisplay from './alert-modal-elements/RawEventsDisplay';
 import { 
   X, 
   Calendar, 
