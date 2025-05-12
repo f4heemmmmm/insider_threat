@@ -1,17 +1,13 @@
 // src/constants/functions.tsx
 import { IndexedSharePointEvent } from "@/constants/interface";
+import { Alert } from '@/types/alert.types';
+import { TimelineEvent } from '@/components/ui/IncidentTimeline';
 
-export const getScoreSeverity = (score: number) => {
-    if (score >= 90) {
-        return "critical";
-    }
-    if (score >= 70) {
-        return "high";
-    }
-    if (score >= 50) {
-        return "medium";
-    }
-    return "low";
+export const getScoreSeverity = (score: number): 'low' | 'medium' | 'high' | 'critical' => {
+  if (score >= 90) return 'critical';
+  if (score >= 70) return 'high';
+  if (score >= 50) return 'medium';
+  return 'low';
 };
 
 export const getSeverityColor = (severity: string) => {
@@ -138,6 +134,19 @@ export const parseAppAccessEvents = (events: any): IndexedSharePointEvent[] => {
     }
 };
 
+  // Extract unique MITRE tactics from alerts
+ export const extractMitreTactics = (alerts: Alert[]): string[] => {
+    const uniqueTactics = new Set<string>();
+    
+    alerts.forEach(alert => {
+      if (alert.MITRE_tactic && alert.MITRE_tactic.trim() !== '') {
+        uniqueTactics.add(alert.MITRE_tactic);
+      }
+    });
+    
+    return Array.from(uniqueTactics);
+  };
+
 export const formatDate = (date: Date): string => {
     const day = String(date.getDate()).padStart(2, '0');
     const monthShort = date.toLocaleString('default', { month: 'short' });
@@ -169,3 +178,68 @@ export const formatDuration = (end: Date, start: Date): string => {
     result += `${remainingSeconds}s`;
     return result.trim();
 };
+  
+  export const calculateIncidentDuration = (alerts: Alert[]) => {
+    if (alerts.length === 0) {
+      return {
+        earliestAlert: null,
+        latestAlert: null,
+        duration: 'No alerts found'
+      };
+    }
+    
+    const earliestAlert = new Date(alerts[0].datestr);
+    const latestAlert = new Date(alerts[alerts.length - 1].datestr);
+    
+    // Using the existing formatDuration function which expects (end, start) parameters
+    const durationFormatted = formatDuration(latestAlert, earliestAlert);
+    
+    return {
+      earliestAlert,
+      latestAlert,
+      duration: durationFormatted
+    };
+  };
+  
+  export const mapAlertsToTimelineEvents = (alerts: Alert[]): TimelineEvent[] => {
+    return alerts.map(alert => {
+      const alertDate = new Date(alert.datestr);
+      
+      let eventType: 'alert' | 'defense' | 'impact' | 'other' = 'other';
+      if (alert.MITRE_tactic) {
+        if (alert.MITRE_tactic.includes('Defense Evasion')) {
+          eventType = 'defense';
+        } else if (alert.MITRE_tactic.includes('Impact')) {
+          eventType = 'impact';
+        } else {
+          eventType = 'alert';
+        }
+      } else {
+        if (alert.score >= 90) eventType = 'alert';
+        else if (alert.score >= 70) eventType = 'defense';
+        else if (alert.score >= 50) eventType = 'impact';
+      }
+      
+      return {
+        id: alert.ID,
+        timestamp: alertDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        date: formatDate(alertDate),
+        title: alert.alert_name,
+        description: alert.Description || 'No description available',
+        type: eventType,
+        severity: getScoreSeverity(alert.score) as 'critical' | 'high' | 'medium' | 'low',
+        MITRE_tactic: alert.MITRE_tactic,
+        MITRE_technique: alert.MITRE_technique,
+        onClick: () => {
+          const alertElement = document.getElementById(`alert-${alert.ID}`);
+          if (alertElement) {
+            alertElement.scrollIntoView({ behavior: 'smooth' });
+            alertElement.classList.add('ring-2', 'ring-indigo-500');
+            setTimeout(() => {
+              alertElement.classList.remove('ring-2', 'ring-indigo-500');
+            }, 2000);
+          }
+        }
+      };
+    });
+  };

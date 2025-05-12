@@ -1,8 +1,8 @@
 // frontend/src/components/ui/alert-modal-elements/AlertHeader.tsx
 
-import React from 'react';
-import { AlertProps } from '@/constants/interface';
-import { AlertMainDetails } from '../AlertMainDetails';
+import React from "react";
+import { AlertProps } from "@/constants/interface";
+import { AlertMainDetails } from "../AlertMainDetails";
 
 export const AlertHeader: React.FC<AlertProps> = ({ alert }) => {
     return (

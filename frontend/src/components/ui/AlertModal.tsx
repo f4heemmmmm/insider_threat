@@ -17,7 +17,6 @@ import { AlertIncidentStatus } from "./alert-modal-elements/AlertIncidentStatus"
 const AlertModal: React.FC<AlertModalProps> = ({ alert, open, onClose, expandedEvidenceSection, toggleEvidenceSection }) => {
     const modalRef = useRef<HTMLDivElement>(null);
     const severity = alert ? getScoreSeverity(alert.score) : "unknown";
-    const severityColor = alert ? getSeverityColor(severity) : "";
 
    // Handle pressing keyboard ESC key to close the alert modal (Keyboard Event)
    useEffect(() => {

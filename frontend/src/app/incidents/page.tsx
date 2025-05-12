@@ -1,4 +1,4 @@
-// frontend/src/app/incidents/page.tsx
+// frontend/src/incidents/page.tsx
 
 "use client";
 
@@ -9,23 +9,23 @@ import { IncidentCard } from "@/components/incident-main-page/IncidentCard";
 import { renderPagination } from "@/components/incident-main-page/IncidentPagination";
 import { CardContent, CardHeader, Card, CardTitle } from "@/components/incident-main-page/CardComponents";
 
-// Alert Files Import
+// Alert Files
 import { Alert } from "@/types/alert.types";
 import { AlertService } from "@/services/alert.service";
 
-// Incident Files Import
+// Incident Files
 import { Incident } from "@/types/incident.types";
 import { IncidentService } from "@/services/incident.service";
 import { IncidentCardSkeleton } from "@/components/incident-main-page/SkeletonComponents";
 
 export default function IncidentsPage() {
     const [limit] = useState(10);
-    const [page, setPage] = useState(1);
+    const [page, setPage]  = useState(1);
     const [total, setTotal] = useState(0);
     const totalPages = Math.ceil(total / limit);
     const [loading, setLoading] = useState(true);
     const [incidents, setIncidents] = useState<Incident[]>([]);
-    const [incidentAlerts, setIncidentAlerts] = useState<Map<string, Alert[]>>(new Map());
+    const [incidentRelatedAlerts, setIncidentRelatedAlerts] = useState<Map<string, Alert[]>>(new Map());
 
     useEffect(() => {
         const fetchIncidents = async () => {
@@ -36,23 +36,19 @@ export default function IncidentsPage() {
                 setIncidents(response.incidents);
                 setTotal(response.total);
 
-                // Stores related alerts for each incident using AlertService
+                // Store related alerts for each incident using AlertService
                 const alertsMap = new Map<string, Alert[]>();
 
                 for (const incident of response.incidents) {
                     try {
-                        const alertsUnderIncident = await AlertService.getAlertsByIncidentID(
-                            incident.ID,
-                            "datestr",      // Sorts by date
-                            "desc"          // Sorts by date with the most recent ones first
-                        );
+                        const alertsUnderIncident = await AlertService.getAlertsByIncidentID(incident.ID, "datestr", "desc");   // Sort by date, and with the most recent ones first
                         alertsMap.set(incident.ID, alertsUnderIncident);
                     } catch (error) {
                         console.error(`Error fetching alerts for incident ${incident.ID}:`, error);
                         alertsMap.set(incident.ID, []);
                     }
                 }
-                setIncidentAlerts(alertsMap);
+                setIncidentRelatedAlerts(alertsMap);
             } catch (error) {
                 console.error("Error fetching incidents:", error);
             } finally {
@@ -68,6 +64,7 @@ export default function IncidentsPage() {
 
     return (
         <div className = "container mx-auto px-4 py-8 w-full">
+            {/* INCIDENT TITLE */}
             <div className = "flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
                 <div>
                     <h1 className = "text-xl sm:text-2xl font-semibold tracking-tight text-gray-800 mb-2">
@@ -76,11 +73,12 @@ export default function IncidentsPage() {
                 </div>
             </div>
 
+            {/* INCIDENT CARDS */}
             <Card className = "shadow-md border-gray-200">
                 <CardHeader className = "flex flex-row items-center justify-between pb-2 border-b border-gray-100">
                     <CardTitle className = "text-xl font-semibold text-gray-800"> All Incidents </CardTitle>
                     <div className = "flex items-center gap-2">
-                        {/* ADDITIONAL CONTROLS/FILTERS HERE */}
+                        {/* ADDITIONAL FILTERS/CONTROLS HERE */}
                     </div>
                 </CardHeader>
                 <CardContent className = "p-4 sm:p-6">
@@ -91,15 +89,15 @@ export default function IncidentsPage() {
                             ))
                         ) : incidents.length === 0 ? (
                             <div className = "text-center py-16 border border-dashed border-gray-200 rounded-lg">
-                                <p className = "text-gray-500 text-lg"> No incidents found </p>
+                                <p className = "text-gray-500 text-lg"> No incidents found. </p>
                             </div>
                         ) : (
-                            // Render actual incidents
+                            // Render actual incidents 
                             incidents.map((incident) => (
                                 <IncidentCard
                                     key = {incident.ID}
                                     incident = {incident}
-                                    alerts = {incidentAlerts.get(incident.ID) || []}
+                                    alerts = {incidentRelatedAlerts.get(incident.ID) || []}
                                     onClick = {() => navigateToIncidentDetails(incident.ID)}
                                 />
                             ))
@@ -109,5 +107,5 @@ export default function IncidentsPage() {
                 </CardContent>
             </Card>
         </div>
-    )
+    );
 };
