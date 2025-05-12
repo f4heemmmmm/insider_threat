@@ -19,7 +19,7 @@ export const AlertHeader: React.FC<AlertProps> = ({ alert }) => {
                                 </div>
                             </div>
                         </div>
-                    )};
+                    )}
                 </div>
             </div>
         </div>

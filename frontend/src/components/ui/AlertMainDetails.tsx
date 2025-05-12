@@ -1,5 +1,5 @@
 // frontend/src/components/ui/AlertMainDetails.tsx
-
+// refactor
 import { AlertProps } from "@/constants/interface"
 import { Calendar, Badge, User, Clock } from "lucide-react";
 

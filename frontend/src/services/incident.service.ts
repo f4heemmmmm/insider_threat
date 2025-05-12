@@ -59,14 +59,14 @@ export const IncidentService = {
     },
 
     // Get incident by ID
-    getIncidentById: async (id: string): Promise<Incident> => {
+    getIncidentByID: async (id: string): Promise<Incident> => {
         const response = await api.get(`/incident/${id}`);
         return response.data;
     },
     
     // Primary method to get an incident (using ID)
     getIncident: async (id: string): Promise<Incident> => {
-        return IncidentService.getIncidentById(id);
+        return IncidentService.getIncidentByID(id);
     },
 
     // Improved version of getRelatedAlerts that uses the backend relationship

@@ -113,7 +113,6 @@ const AlertModal: React.FC<AlertModalProps> = ({ alert, open, onClose, expandedE
                                 expandedEvidenceSection = {expandedEvidenceSection} 
                                 toggleEvidenceSection = {toggleEvidenceSection} 
                             />
-                            ;
                         </div>
                         {alert.evidence && alert.evidence.list_raw_events.length > 0 && (
                             <div className = "w-full">
