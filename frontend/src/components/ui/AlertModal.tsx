@@ -106,7 +106,7 @@ const AlertModal: React.FC<AlertModalProps> = ({ alert, open, onClose, expandedE
                                 </div>
                             )}
                         </div>
-                        <div className="w-full">
+                        <div className = "w-full">
                             <AlertEvidence 
                                 alert = {alert} 
                                 expandedEvidenceSection = {expandedEvidenceSection} 

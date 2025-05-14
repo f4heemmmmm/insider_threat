@@ -1,7 +1,6 @@
 // frontend/src/components/AlertCards.tsx
 
-import AlertModal from "./AlertModal";
-import React, { useState } from "react";
+import React from "react";
 import { AlertCircle } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { Alert } from "@/types/alert.types";
@@ -11,28 +10,24 @@ import { getScoreSeverity } from "@/constants/functions";
 interface AlertCardProps {
     alerts: Alert[];
     loading?: boolean;
+    onAlertClick?: (alert: Alert) => void; // ✅ Add this prop
 }
 
-export const AlertCards: React.FC<AlertCardProps> = ({ alerts, loading = false }) => {
-    const [modalOpen, setModalOpen] = useState<boolean>(false);
-    const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
-    const [expandedEvidenceSection, setExpandedEvidenceSection] = useState<Record<string, boolean>>({});
+export const AlertCards: React.FC<AlertCardProps> = ({ 
+    alerts, 
+    loading = false,
+    onAlertClick // ✅ Accept the onAlertClick prop
+}) => {
+    // ✅ Removed modal-related state since we're using navigation now
+    // const [modalOpen, setModalOpen] = useState<boolean>(false);
+    // const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
+    // const [expandedEvidenceSection, setExpandedEvidenceSection] = useState<Record<string, boolean>>({});
 
-    const openAlertModal = (alert: Alert) => {
-        setSelectedAlert(alert);
-        setModalOpen(true);
-    };
-
-    const closeAlertModal = () => {
-        setModalOpen(false);
-    };
-
-    const toggleEvidenceSection = (alertID: string, sectionName: string) => {
-        const key = `${alertID}-${sectionName}`;
-        setExpandedEvidenceSection(prev => ({
-            ...prev,
-            [key]: !prev[key]
-        }));
+    // ✅ Updated to use onAlertClick instead of opening modal
+    const handleAlertClick = (alert: Alert) => {
+        if (onAlertClick) {
+            onAlertClick(alert);
+        }
     };
 
     // Loading State
@@ -56,90 +51,82 @@ export const AlertCards: React.FC<AlertCardProps> = ({ alerts, loading = false }
     }
 
     return (
-        <>
-            <div className = "space-y-4 w-full mx-auto">
-                {alerts.map((alert) => {
-                    const severity = getScoreSeverity(alert.score);
-                    return (
-                        <div
-                            id = {`alert-${alert.ID}`}
-                            key = {alert.ID}
-                            className = {`mb-6 bg-white rounded-lg shadow-sm overflow-hidden transition-all duration-200 border border-gray-200 hover:shadow-md cursor-pointer transform hover:translate-y-[-2px]`}
-                            onClick = {() => openAlertModal(alert)}
-                        >
-                            {/* Alert Header */}
-                            <div className = "p-6 flex flex-col gap-5">
-                                <div className = "flex justify-between items-center">
-                                    <div className = "flex items-center gap-2">
-                                        <StatusBadge status = {severity} />
-                                        <h3 className = "text-base font-semibold text-gray-600"> Alert ID: </h3>
-                                        <h3 className = "text-base font-light text-gray-500"> {alert.ID} </h3>
-                                    </div>
-                                    <div>
-                                        <span className = "font-semibold text-xl"> {alert.score} </span>
-                                    </div>
+        <div className = "space-y-4 w-full mx-auto">
+            {alerts.map((alert) => {
+                const severity = getScoreSeverity(alert.score);
+                return (
+                    <div
+                        id = {`alert-${alert.ID}`}
+                        key = {alert.ID}
+                        className = {`mb-6 bg-white rounded-lg shadow-sm overflow-hidden transition-all duration-200 border border-gray-200 hover:shadow-md cursor-pointer transform hover:translate-y-[-2px]`}
+                        onClick = {() => handleAlertClick(alert)} // ✅ Updated to use navigation
+                    >
+                        {/* Alert Header */}
+                        <div className = "p-6 flex flex-col gap-5">
+                            <div className = "flex justify-between items-center">
+                                <div className = "flex items-center gap-2">
+                                    <StatusBadge status = {severity} />
+                                    <h3 className = "text-base font-semibold text-gray-600"> Alert ID: </h3>
+                                    <h3 className = "text-base font-light text-gray-500"> {alert.ID} </h3>
                                 </div>
-                                <AlertMainDetails alert = {alert} />
-                                {/* ALERT SUMMARY */}
-                                <div className = "px-2 py-4 border-t border-gray-200">
-                                    <div className = "flex flex-wrap items-center">
-                                        {alert.MITRE_tactic && (
-                                            <div className = "py-2 px-4 text-sm font-light text-gray-600 flex items-center">
-                                                <span className = "mr-1 font-semibold"> MITRE Tactic: </span>
-                                                {alert.MITRE_tactic}
-                                            </div>
-                                        )}
+                                <div>
+                                    <span className = "font-semibold text-xl"> {alert.score} </span>
+                                </div>
+                            </div>
+                            <AlertMainDetails alert = {alert} />
+                            {/* ALERT SUMMARY */}
+                            <div className = "px-2 py-4 border-t border-gray-200">
+                                <div className = "flex flex-wrap items-center">
+                                    {alert.MITRE_tactic && (
+                                        <div className = "py-2 px-4 text-sm font-light text-gray-600 flex items-center">
+                                            <span className = "mr-1 font-semibold"> MITRE Tactic: </span>
+                                            {alert.MITRE_tactic}
+                                        </div>
+                                    )}
 
-                                        {alert.MITRE_tactic && alert.MITRE_technique && (
-                                            <div className = "h-6 border-r border-gray-300 mx-2" />
-                                        )}
+                                    {alert.MITRE_tactic && alert.MITRE_technique && (
+                                        <div className = "h-6 border-r border-gray-300 mx-2" />
+                                    )}
 
-                                        {alert.MITRE_technique && (
-                                            <div className = "py-2 px-4 text-sm font-light text-gray-600 flex items-center">
-                                                <span className = "mr-1 font-semibold"> MITRE Technique: </span>
-                                                {alert.MITRE_technique}
-                                            </div>
-                                        )}
+                                    {alert.MITRE_technique && (
+                                        <div className = "py-2 px-4 text-sm font-light text-gray-600 flex items-center">
+                                            <span className = "mr-1 font-semibold"> MITRE Technique: </span>
+                                            {alert.MITRE_technique}
+                                        </div>
+                                    )}
 
-                                        {alert.MITRE_technique && alert.Detection_model && (
-                                            <div className = "h-6 border-r border-gray-300 mx-2" />
-                                        )}
+                                    {alert.MITRE_technique && alert.Detection_model && (
+                                        <div className = "h-6 border-r border-gray-300 mx-2" />
+                                    )}
 
-                                        {alert.Detection_model && (
-                                            <div className = "py-2 px-4 text-sm font-light text-gray-600 flex items-center">
-                                                <span className = "mr-1 font-semibold"> Detection Model: </span>
-                                                {alert.Detection_model}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {alert.Description && (
-                                        <div className = "text-sm text-gray-600 mt-4 px-4 gap-1 flex flex-col">
-                                            <div className = "text-sm font-semibold"> Description: </div>
-                                            <div className = "flex items-start">
-                                                <p className = "font-light">
-                                                    {
-                                                        alert.Description.length > 250 ?
-                                                            `${alert.Description.substring(0, 250)}...` :
-                                                            alert.Description
-                                                    }
-                                                </p>
-                                            </div>
+                                    {alert.Detection_model && (
+                                        <div className = "py-2 px-4 text-sm font-light text-gray-600 flex items-center">
+                                            <span className = "mr-1 font-semibold"> Detection Model: </span>
+                                            {alert.Detection_model}
                                         </div>
                                     )}
                                 </div>
+
+                                {alert.Description && (
+                                    <div className = "text-sm text-gray-600 mt-4 px-4 gap-1 flex flex-col">
+                                        <div className = "text-sm font-semibold"> Description: </div>
+                                        <div className = "flex items-start">
+                                            <p className = "font-light">
+                                                {
+                                                    alert.Description.length > 250 ?
+                                                        `${alert.Description.substring(0, 250)}...` :
+                                                        alert.Description
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    )
-                })};
-            </div>
-            <AlertModal
-                alert = {selectedAlert}
-                open = {modalOpen}
-                onClose = {closeAlertModal}
-                expandedEvidenceSection = {expandedEvidenceSection}
-                toggleEvidenceSection = {toggleEvidenceSection}
-            />
-        </>
+                    </div>
+                )
+            })}
+        </div>
+        // ✅ Removed AlertModal since we're using navigation now
     );
 };

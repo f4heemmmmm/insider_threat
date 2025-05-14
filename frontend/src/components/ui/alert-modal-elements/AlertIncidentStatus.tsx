@@ -52,7 +52,7 @@ export const AlertIncidentStatus: React.FC<AlertProps> = ({ alert }) => {
         <div>
             <h4 className = "text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3"> Incident Status </h4>
             <div className = "bg-white p-4 rounded-md border border-gray-200 shadow-sm">
-                <div className = "flex items-center justify-between mb-3">
+                <div className = "flex items-center justify-between">
                     <span className = "font-medium text-gray-700"> Incident </span>
                     {alert.isUnderIncident ? (
                         <span className = "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">

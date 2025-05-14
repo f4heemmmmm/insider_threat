@@ -121,7 +121,7 @@ export const AlertService = {
     },
 
     // Get alert by ID
-    getAlertById: async (id: string): Promise<Alert> => {
+    getAlertByID: async (id: string): Promise<Alert> => {
         const response = await api.get(`/alert/${id}`);
         return response.data;
     },

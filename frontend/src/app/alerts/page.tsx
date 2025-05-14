@@ -4,16 +4,19 @@
 
 import React, { useEffect, useState } from "react";
 import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { useRouter } from "next/navigation"; // ✅ Add this import
 
 // Component Imports
 import { AlertCards } from "@/components/ui/AlertCards";
-import { Pagination } from "@/components/ui/Pagination";
+import { Pagination } from "@/components/Pagination";
 
 // Alert Files
 import { Alert } from "@/types/alert.types";
 import { AlertService, SortField, SortOrder } from "@/services/alert.service";
 
 export default function AlertsPage() {
+    const router = useRouter(); // ✅ Add this line to use router
+    
     const [limit] = useState(10);
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
@@ -103,6 +106,11 @@ export default function AlertsPage() {
         setPage(newPage);
     };
 
+    // ✅ Add this function to handle alert clicks
+    const handleAlertClick = React.useCallback((alert: Alert): void => {
+        router.push(`/alerts/${alert.ID}`);
+    }, [router]);
+
     return (
         <div className = "h-full p-10">
             <div className = "bg-white shadow rounded-lg h-full flex flex-col">
@@ -174,7 +182,12 @@ export default function AlertsPage() {
                 </div>
 
                 <div className = "flex-grow p-6 bg-gray-50">
-                    <AlertCards alerts = {alerts} loading = {loading} />
+                    {/* ✅ Pass the handleAlertClick function to AlertCards */}
+                    <AlertCards 
+                        alerts={alerts} 
+                        loading={loading}
+                        onAlertClick={handleAlertClick}
+                    />
 
                     {/* PAGINATION */}
                     {totalPages > 0 && (

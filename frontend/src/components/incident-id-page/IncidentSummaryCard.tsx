@@ -1,3 +1,4 @@
+
 // frontend/src/components/incident-id-page/IncidentSummaryCard.tsx
 
 "use client";
@@ -129,3 +130,5 @@ export const IncidentSummaryCard: React.FC<IncidentSummaryCardProps> = ({
         </div>
     );
 };
+
+

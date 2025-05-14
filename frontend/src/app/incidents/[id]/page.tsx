@@ -61,7 +61,7 @@ export default function IncidentDetailPage() {
   
           setIncident(foundIncident);
           
-          const alerts = await IncidentService.getRelatedAlerts(foundIncident);
+          const alerts = await IncidentService.getRelatedAlerts(foundIncident.ID);
           const sortedAlerts = [...alerts].sort((a, b) => 
             new Date(a.datestr).getTime() - new Date(b.datestr).getTime()
           );

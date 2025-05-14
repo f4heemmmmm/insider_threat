@@ -267,3 +267,4 @@ export const AlertsModal: React.FC<AlertsModalProps> = ({
     </div>
   );
 };
+
