@@ -7,8 +7,8 @@ import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useRouter } from "next/navigation"; // ✅ Add this import
 
 // Component Imports
-import { AlertCards } from "@/components/ui/AlertCards";
 import { Pagination } from "@/components/Pagination";
+import { AlertCards } from "@/components/alerts/main/AlertCards";
 
 // Alert Files
 import { Alert } from "@/types/alert.types";

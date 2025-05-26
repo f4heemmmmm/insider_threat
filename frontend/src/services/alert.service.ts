@@ -156,5 +156,37 @@ export const AlertService = {
             }
         });
         return response.data;
-    }
+    },
+
+    // NEW: Get ALL alerts without any filtering or pagination
+    getAllAlerts: async (
+        sortField: SortField = 'datestr', 
+        sortOrder: SortOrder = 'desc'
+    ): Promise<Alert[]> => {
+        const params: any = {
+            sortField,
+            sortOrder
+        };
+        
+        const response = await api.get("/alert/all", {
+            params
+        });
+        return response.data;
+    },
+
+    // NEW: Get ALL alerts with total count (no filtering, no pagination)
+    getAllAlertsWithCount: async (
+        sortField: SortField = 'datestr', 
+        sortOrder: SortOrder = 'desc'
+    ): Promise<AlertsResponse> => {
+        const params: any = {
+            sortField,
+            sortOrder
+        };
+        
+        const response = await api.get("/alert/all/with-count", {
+            params
+        });
+        return response.data;
+    },
 };

@@ -141,5 +141,39 @@ export const IncidentService = {
     getRelatedAlerts: async (incidentId: string): Promise<Alert[]> => {
         const response = await api.get(`/incident/${incidentId}/alerts`);
         return response.data;
-    }
+    },
+    
+     // NEW: Get ALL incidents without any filtering or pagination
+     getAllIncidents: async (
+        sortField: SortField = 'windows_start', 
+        sortOrder: SortOrder = 'desc'
+    ): Promise<Incident[]> => {
+        const params: any = {
+            sortField,
+            sortOrder
+        };
+        
+        const response = await api.get("/incident/all", {
+            params
+        });
+        return response.data;
+    },
+
+    // NEW: Get ALL incidents with total count (no filtering, no pagination)
+    getAllIncidentsWithCount: async (
+        sortField: SortField = 'windows_start', 
+        sortOrder: SortOrder = 'desc'
+    ): Promise<IncidentsResponse> => {
+        const params: any = {
+            sortField,
+            sortOrder
+        };
+        
+        const response = await api.get("/incident/all/with-count", {
+            params
+        });
+        return response.data;
+    },
+
+    
 };

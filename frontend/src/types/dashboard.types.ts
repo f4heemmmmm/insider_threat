@@ -1,4 +1,4 @@
-export interface DashboardStats {
+export interface DashboardData {
     totalAlerts: number;
     totalIncidents: number;
 }

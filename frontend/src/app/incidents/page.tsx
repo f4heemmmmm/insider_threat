@@ -6,8 +6,8 @@ import React, { useEffect, useState } from "react";
 import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 // Components Import
-import { IncidentCard } from "@/components/incident-main-page/IncidentCard";
-import { CardContent, CardHeader, Card, CardTitle } from "@/components/incident-main-page/CardComponents";
+import { IncidentCard } from "@/components/incidents/main/IncidentCard";
+import { CardContent, CardHeader, Card, CardTitle } from "@/components/incidents/main/CardComponents";
 import { Pagination } from "@/components/Pagination";
 
 // Alert Files
@@ -17,7 +17,7 @@ import { AlertService } from "@/services/alert.service";
 // Incident Files
 import { Incident } from "@/types/incident.types";
 import { IncidentService, SortField, SortOrder } from "@/services/incident.service";
-import { IncidentCardSkeleton } from "@/components/incident-main-page/SkeletonComponents";
+import { IncidentCardSkeleton } from "@/components/incidents/main/SkeletonComponents";
 
 export default function IncidentsPage() {
     const [limit] = useState(10);

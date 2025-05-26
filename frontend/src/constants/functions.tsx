@@ -1,7 +1,7 @@
 // src/constants/functions.tsx
 import { IndexedSharePointEvent } from "@/constants/interface";
 import { Alert } from '@/types/alert.types';
-import { TimelineEvent } from '@/components/ui/IncidentTimeline';
+import { TimelineEvent } from "@/components/incidents/constants/interfaces";
 
 export const getScoreSeverity = (score: number): 'low' | 'medium' | 'high' | 'critical' => {
   if (score >= 90) return 'critical';
@@ -135,7 +135,7 @@ export const parseAppAccessEvents = (events: any): IndexedSharePointEvent[] => {
 };
 
   // Extract unique MITRE tactics from alerts
- export const extractMitreTactics = (alerts: Alert[]): string[] => {
+ export const extractMITRETactics = (alerts: Alert[]): string[] => {
     const uniqueTactics = new Set<string>();
     
     alerts.forEach(alert => {
