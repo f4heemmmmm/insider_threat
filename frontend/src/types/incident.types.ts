@@ -1,3 +1,5 @@
+// frontend/src/types/incident.types.ts
+
 export interface Incident {
     ID: string;
     user: string;

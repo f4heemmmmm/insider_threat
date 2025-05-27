@@ -1,3 +1,5 @@
+// frontend/src/types/alert.types.ts
+
 export interface Alert {
     ID: string;
     user: string;
@@ -11,7 +13,7 @@ export interface Alert {
     Detection_model: string;
     Description: string | null;
     isUnderIncident: boolean;
-    incidentID?: string; // Add this field
+    incidentID?: string;
     created_at: Date;
     updated_at: Date;
 }

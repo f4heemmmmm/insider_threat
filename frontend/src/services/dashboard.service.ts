@@ -3,19 +3,12 @@
 import { AlertService } from "./alert.service";
 import { IncidentService } from "./incident.service";
 import { DashboardData } from "@/types/dashboard.types";
-
-export interface ExtendedDashboardData extends DashboardData {
-    // RECHECK
-    averageAlertScore: number;
-    averageIncidentScore: number;
-    alertsUnderIncidentCount: number;
-    criticalSeverityAlertsCount: number;
-    criticalIncidentsCount: number;
-    activeUsersCount: number;
-}
-
+import { ExtendedDashboardData } from "./constants/interfaces";
 export const DashboardService = {
-    // Basic dashboard data
+    /**
+     * Retrieves basic dashboard data including total alerts and incidents
+     * @returns Promise containing basic dashboard metrics
+     */
     getData: async(): Promise<DashboardData> => {
         const [totalAlerts, totalIncidents] = await Promise.all([
             AlertService.getAlertCount(),
@@ -28,7 +21,10 @@ export const DashboardService = {
         };
     },
 
-    // Extended dashboard data
+    /**
+     * Retrieves extended dashboard data with additional calculated metrics
+     * @returns Promise containing comprehensive dashboard analytics
+     */
     getExtendedData: async (): Promise<ExtendedDashboardData> => {
         const [
             totalAlerts,
@@ -42,8 +38,6 @@ export const DashboardService = {
             IncidentService.getIncidents(100),
         ]);
 
-        // Calculate additional metrics
-        // RECHECK
         const averageAlertScore = recentAlerts.alerts.length > 0
         ? recentAlerts.alerts.reduce((sum, alert) => sum + alert.score, 0) / recentAlerts.alerts.length
         : 0;

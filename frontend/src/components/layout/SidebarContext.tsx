@@ -1,59 +1,80 @@
-// Modified SidebarContext.tsx
+// frontend/src/components/layout/SidebarContext.tsx
+
 "use client";
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname } from "next/navigation";
+import { SidebarContextType } from "./constants/interfaces";
+import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
 
-interface SidebarContextType {
-  expanded: boolean;
-  setExpanded: (expanded: boolean) => void;
-  isMobile: boolean;
-}
-
-// Create context with default closed state
 const SidebarContext = createContext<SidebarContextType>({
-  expanded: false, // Default to closed 
-  setExpanded: () => {},
-  isMobile: false
+    expanded: false,
+    setExpanded: () => {},
+    isMobile: false
 });
 
 export const useSidebar = () => useContext(SidebarContext);
 
 interface SidebarProviderProps {
-  children: ReactNode;
+    children: ReactNode;
 }
 
+/**
+ * SidebarProvider component that manages sidebar state including expansion,
+ * mobile detection, and localStorage persistence. Handles responsive behavior
+ * and automatic sidebar collapse on mobile navigation.
+ */
 export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) => {
-  // Initialize with closed state for better consistency
-  const [expanded, setExpanded] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const pathname = usePathname();
+    const [expanded, setExpandedState] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    const pathname = usePathname();
 
-  // This effect only handles mobile detection, not sidebar state
-  useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth < 1024;
-      setIsMobile(mobile);
+    const setExpanded = (newExpanded: boolean) => {
+        setExpandedState(newExpanded);
+        if (typeof window !== "undefined") {
+            localStorage.setItem("sidebar-expanded", JSON.stringify(newExpanded));
+        }
     };
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            try {
+                const saved = localStorage.getItem("sidebar-expanded");
+                if (saved !== null) {
+                    const savedExpanded = JSON.parse(saved);
+                    setExpandedState(savedExpanded);
+                }
+            } catch (error) {
+                console.warn("Failed to load sidebar state from localStorage:", error);
+            }
+        }
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            const mobile = window.innerWidth < 1024;
+            setIsMobile(mobile);
+        };
+        
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
     
-    // Check on mount
-    checkMobile();
+    useEffect(() => {
+        if (isMobile && expanded) {
+            setExpanded(false);
+        }
+    }, [pathname, isMobile, expanded]);
     
-    // Listen for resize events
-    window.addEventListener('resize', checkMobile);
+    if (!mounted) {
+        return null;
+    }
     
-    // Cleanup
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  
-  // This effect handles closing the sidebar on page navigation
-  useEffect(() => {
-    // Close sidebar when pathname changes (page navigation)
-    setExpanded(false);
-  }, [pathname]);
-  
-  return (
-    <SidebarContext.Provider value={{ expanded, setExpanded, isMobile }}>
-      {children}
-    </SidebarContext.Provider>
-  );
+    return (
+        <SidebarContext.Provider value = {{ expanded, setExpanded, isMobile }}>
+            {children}
+        </SidebarContext.Provider>
+    );
 };
