@@ -2,10 +2,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { SidebarProvider } from '@/components/layout/SidebarContext';
-import { MainContent } from '@/components/layout/MainContent';
-
+import AuthenticatedLayout from '@/components/layout/AuthenticatedLayout';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
@@ -21,14 +18,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <SidebarProvider>
-          <div className="min-h-screen bg-gray-100">
-            <Sidebar />
-            <MainContent>
-              {children}
-            </MainContent>
-          </div>
-        </SidebarProvider>
+        <AuthenticatedLayout>
+          {children}
+        </AuthenticatedLayout>
       </body>
     </html>
   );

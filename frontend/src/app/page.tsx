@@ -12,8 +12,9 @@ import { DashboardData } from "@/types/dashboard.types";
 // Services
 import { AlertService } from "@/services/alert.service";
 import { IncidentService } from "@/services/incident.service";
+import { AnalyticsService } from "@/services/analytics.service";
 import { DashboardService } from "@/services/dashboard.service";
-import { TimelineData, AlertsByMITRETacticData, AlertsByMITRETechniqueData, ScoreDistributionData, AnalyticsService } from "@/services/analytics.service";
+import { TimelineData, AlertsByMITRETacticData, AlertsByMITRETechniqueData, ScoreDistributionData } from "@/services/constants/interfaces";
 
 // Components and Charts
 import { DataCard } from "@/components/dashboard/DataCard";

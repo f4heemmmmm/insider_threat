@@ -1,6 +1,7 @@
 // frontend/src/services/analytics.service.ts
 
 import { api } from "./api";
+import { handleApiError } from "./apiErrorHandle";
 import { AlertsByDateData, AlertsByMITRETacticData, AlertsByMITRETechniqueData, AlertsByUserData, IncidentsByDateData, ScoreDistributionData, TimelineData, TrendData } from "./constants/interfaces";
 
 export const AnalyticsService = {
@@ -16,14 +17,20 @@ export const AnalyticsService = {
         endDate: Date,
         groupBy: "day" | "week" | "month" = "day"
     ): Promise<AlertsByDateData[]> => {
-        const response = await api.get("/analytics/alerts-by-date", {
-            params: {
-                startDate: startDate.toISOString(),
-                endDate: endDate.toISOString(),
-                groupBy
-            }
-        });
-        return response.data;
+        try {
+            const response = await api.get("/analytics/alerts-by-date", {
+                params: {
+                    startDate: startDate.toISOString(),
+                    endDate: endDate.toISOString(),
+                    groupBy
+                }
+            });
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch alerts by date:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -38,14 +45,20 @@ export const AnalyticsService = {
         endDate: Date,
         groupBy: "day" | "week" | "month" = "day"
     ): Promise<IncidentsByDateData[]> => {
-        const response = await api.get("/analytics/incidents-by-date", {
-            params: {
-                startDate: startDate.toISOString(),
-                endDate: endDate.toISOString(),
-                groupBy
-            }
-        });
-        return response.data;
+        try {
+            const response = await api.get("/analytics/incidents-by-date", {
+                params: {
+                    startDate: startDate.toISOString(),
+                    endDate: endDate.toISOString(),
+                    groupBy
+                }
+            });
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch incidents by date:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -53,8 +66,14 @@ export const AnalyticsService = {
      * @returns Promise containing array of alerts grouped by MITRE tactic
      */
     getAlertsByMITRETactic: async (): Promise<AlertsByMITRETacticData[]> => {
-        const response = await api.get("/analytics/top-mitre-tactics");
-        return response.data;
+        try {
+            const response = await api.get("/analytics/top-mitre-tactics");
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch alerts by MITRE tactic:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -62,8 +81,14 @@ export const AnalyticsService = {
      * @returns Promise containing array of alerts grouped by MITRE technique
      */
     getAlertsByMITRETechnique: async (): Promise<AlertsByMITRETechniqueData[]> => {
-        const response = await api.get("/analytics/top-mitre-techniques");
-        return response.data;
+        try {
+            const response = await api.get("/analytics/top-mitre-techniques");
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch alerts by MITRE technique:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -72,12 +97,18 @@ export const AnalyticsService = {
      * @returns Promise containing array of alerts by user data
      */
     getAlertsByUser: async (limit: number = 10): Promise<AlertsByUserData[]> => {
-        const response = await api.get("/analytics/alerts-by-user", {
-            params: {
-                limit
-            }
-        });
-        return response.data;
+        try {
+            const response = await api.get("/analytics/alerts-by-user", {
+                params: {
+                    limit
+                }
+            });
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch alerts by user:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -85,8 +116,14 @@ export const AnalyticsService = {
      * @returns Promise containing array of score distribution data
      */
     getScoreDistribution: async (): Promise<ScoreDistributionData[]> => {
-        const response = await api.get("/analytics/score-distribution");
-        return response.data;
+        try {
+            const response = await api.get("/analytics/score-distribution");
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch score distribution:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -101,14 +138,20 @@ export const AnalyticsService = {
         endDate: Date,
         groupBy: "day" | "week" | "month" = "day"
     ): Promise<TimelineData[]> => {
-        const response = await api.get("/analytics/timeline", {
-            params: {
-                startDate: startDate.toISOString(),
-                endDate: endDate.toISOString(),
-                groupBy
-            }
-        });
-        return response.data;
+        try {
+            const response = await api.get("/analytics/timeline", {
+                params: {
+                    startDate: startDate.toISOString(),
+                    endDate: endDate.toISOString(),
+                    groupBy
+                }
+            });
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch timeline data:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -123,14 +166,20 @@ export const AnalyticsService = {
         endDate: Date,
         groupBy: "day" | "week" | "month" = "day"
     ): Promise<TrendData[]> => {
-        const response = await api.get("/analytics/trends", {
-            params: {
-                startDate: startDate.toISOString(),
-                endDate: endDate.toISOString(),
-                groupBy
-            }
-        });
-        return response.data;
+        try {
+            const response = await api.get("/analytics/trends", {
+                params: {
+                    startDate: startDate.toISOString(),
+                    endDate: endDate.toISOString(),
+                    groupBy
+                }
+            });
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch trends data:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -138,8 +187,14 @@ export const AnalyticsService = {
      * @returns Promise containing array of severity distribution data
      */
     getAlertSeverityDistribution: async (): Promise<{ severity: string, count: number }[]> => {
-        const response = await api.get("/analytics/alert-severity");
-        return response.data;
+        try {
+            const response = await api.get("/analytics/alert-severity");
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch alert severity distribution:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -148,12 +203,18 @@ export const AnalyticsService = {
      * @returns Promise containing array of top MITRE techniques
      */
     getTopMITRETechniques: async (limit: number = 10): Promise<{ technique: string, count: number }[]> => {
-        const response = await api.get("/analytics/top-mitre-techniques", {
-            params: {
-                limit
-            }
-        });
-        return response.data;
+        try {
+            const response = await api.get("/analytics/top-mitre-techniques", {
+                params: {
+                    limit
+                }
+            });
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch top MITRE techniques:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -162,11 +223,17 @@ export const AnalyticsService = {
      * @returns Promise containing array of top MITRE tactics
      */
     getTopMITRETactics: async (limit: number = 10): Promise<{ tactic: string, count: number }[]> => {
-        const response = await api.get("/analytics/top-mitre-tactics", {
-            params: {
-                limit
-            }
-        });
-        return response.data;
+        try {
+            const response = await api.get("/analytics/top-mitre-tactics", {
+                params: {
+                    limit
+                }
+            });
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch top MITRE tactics:', apiError);
+            throw apiError;
+        }
     }
 };

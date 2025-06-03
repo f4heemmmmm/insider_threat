@@ -1,0 +1,136 @@
+# insider_threat/docker-compose.yml
+# Production configuration for Insider Threat Detection System
+# This configuration sets up a complete production environment with PostgreSQL database,
+# Node.js backend API, and Next.js frontend application
+services:
+    # PostgreSQL Database Service
+    # Provides persistent data storage for the application
+    database:
+        image: postgres:15-alpine
+        container_name: insider-threat-db-prod
+        
+        # Database configuration
+        environment:
+            POSTGRES_DB: insider_threat
+            POSTGRES_USER: ${DATABASE_USERNAME:-postgres}
+            POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-postgres}
+        
+        # Persistent volume mount for data retention
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        
+        networks:
+            - app-network
+        
+        # Automatic restart policy
+        restart: unless-stopped
+        
+        # Health check to ensure database is ready before dependent services start
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-postgres} -d insider_threat"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+
+    # Backend API Service
+    # Handles business logic, database operations, and API endpoints
+    backend:
+        build: 
+            context: ./backend
+            dockerfile: Dockerfile
+            target: production
+        
+        container_name: insider-threat-backend-prod
+        
+        environment:
+            # Database connection settings
+            DATABASE_HOST: database
+            DATABASE_PORT: 5432
+            DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
+            DATABASE_PASSWORD: ${DATABASE_PASSWORD:-postgres}
+            DATABASE_NAME: insider_threat
+            
+            # Node.js runtime configuration
+            NODE_ENV: production
+            PORT: 3000
+            
+            # JWT Authentication - Critical: Must be set securely in production
+            JWT_SECRET: ${JWT_SECRET}
+            JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+            
+            # Cross-Origin Resource Sharing configuration
+            FRONTEND_URL: ${FRONTEND_URL:-https://yourdomain.com}
+            
+            # CSV file processing configuration
+            CSV_DROP_PATH: /app/storage/csv/drop
+            CSV_PROCESSED_PATH: /app/storage/csv/processed
+            CSV_ERROR_PATH: /app/storage/csv/error
+            CSV_MONITOR_INTERVAL: 10000  # Monitor interval in milliseconds
+        
+        # Expose backend API port
+        ports:
+            - "3000:3000"
+        
+        # Wait for database to be healthy before starting
+        depends_on:
+            database:
+                condition: service_healthy
+        
+        restart: unless-stopped
+        
+        # Mount storage directory for CSV file processing
+        volumes:
+            - ./backend/storage:/app/storage
+        
+        networks:
+            - app-network
+        
+        # Health check for backend service availability
+        healthcheck:
+            test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s  # Allow application startup time
+
+    # Frontend Web Application
+    # Next.js application serving the user interface
+    frontend:
+        build: 
+            context: ./frontend
+            dockerfile: Dockerfile
+        
+        container_name: insider-threat-frontend-prod
+        
+        environment:
+            # API endpoint configuration for frontend-backend communication
+            NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+            NODE_ENV: production
+            PORT: 3000
+        
+        # Expose frontend on different port to avoid conflicts
+        ports:
+            - "3001:3000"
+        
+        # Wait for backend API to be available
+        depends_on:
+            backend:
+                condition: service_healthy
+        
+        restart: unless-stopped
+        
+        networks:
+            - app-network
+
+# Named volumes for data persistence
+volumes:
+    # PostgreSQL data volume - ensures data survives container restarts
+    postgres_data:
+        driver: local
+
+# Custom network for service communication
+networks:
+    # Internal network for secure service-to-service communication
+    app-network:
+        driver: bridge
+        # Isolates application services from external networks

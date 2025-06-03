@@ -1,4 +1,6 @@
-import { AlertsByMITRETacticData, ScoreDistributionData, TimelineData } from "@/services/analytics.service";
+// frontend/src/components/charts/interfaces.tsx
+
+import { AlertsByMITRETacticData, ScoreDistributionData, TimelineData } from "@/services/constants/interfaces";
 
 export interface MITRETacticsChartProps {
     data: AlertsByMITRETacticData[];

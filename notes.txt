@@ -1,77 +1,92 @@
-// src/components/ui/RawEventsDisplay.tsx
+# docker-compose.prod.yml - Production configuration
 
-import { Search } from "lucide-react";
-import React, { useState, useRef, useEffect } from "react";
-import { RawEventsDisplayProps } from "../constants/interfaces";
+services:
+  database:
+    image: postgres:15-alpine
+    container_name: insider-threat-db-prod
+    environment:
+      POSTGRES_DB: insider_threat
+      POSTGRES_USER: ${DATABASE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-postgres} -d insider_threat"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-// Component Import
-import EventsList from "./EventsList";
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: insider-threat-backend-prod
+    environment:
+      # Database connection
+      DATABASE_HOST: database
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-postgres}
+      DATABASE_NAME: insider_threat
+      
+      # Node.js settings
+      NODE_ENV: production
+      PORT: 3000
+      
+      # JWT Configuration - MUST be set securely in production
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      
+      # CORS settings for production
+      FRONTEND_URL: ${FRONTEND_URL:-https://yourdomain.com}
+      
+      # Storage paths
+      CSV_DROP_PATH: /app/storage/csv/drop
+      CSV_PROCESSED_PATH: /app/storage/csv/processed
+      CSV_ERROR_PATH: /app/storage/csv/error
+      CSV_MONITOR_INTERVAL: 10000
+    ports:
+      - "3000:3000"
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./backend/storage:/app/storage
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s  # Give the application time to start up
 
-// Function Import
-import { parseAppAccessEvents } from "@/constants/functions";
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: insider-threat-frontend-prod
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "3001:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
 
-// Extended interface to include resetScroll prop
-interface ExtendedRawEventsDisplayProps extends RawEventsDisplayProps {
-    resetScroll?: boolean;
-}
+volumes:
+  postgres_data:
 
-const RawEventsDisplay: React.FC<ExtendedRawEventsDisplayProps> = ({ rawEvents, resetScroll }) => {
-    const [searchTerm, setSearchTerm] = useState<string>("");
-    const eventsListScrollRef = useRef<HTMLDivElement>(null);
-
-    // Reset scroll position when resetScroll prop changes
-    useEffect(() => {
-        if (resetScroll && eventsListScrollRef.current) {
-            eventsListScrollRef.current.scrollTop = 0;
-        }
-    }, [resetScroll]);
-
-    // Handle null or undefined input
-    if (!rawEvents) {
-        return (
-            <div className="text-sm text-gray-500 italic bg-gray-50 p-6 rounded-lg border border-gray-200 text-center">
-                No raw events available
-            </div>
-        );
-    }
-
-    const parsedEvents = parseAppAccessEvents(rawEvents);
-
-    const filteredEvents = !searchTerm.trim()
-        ? parsedEvents
-        : parsedEvents.filter(event => {
-            const eventString = JSON.stringify(event).toLowerCase();
-            return eventString.includes(searchTerm.toLowerCase());
-        });
-
-    return (
-        <div className="bg-white">
-            {/* SEARCH BAR */}
-            <div className="p-4 border-b border-gray-100">
-                <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search events..."
-                        className="pl-10 pr-4 py-2.5 w-full rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white transition-colors"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <div className="mt-3 text-xs text-gray-500 font-medium">
-                    {filteredEvents.length} of {parsedEvents.length} events
-                </div>
-            </div>
-
-            {/* EVENTS LIST */}
-            <div 
-                ref={eventsListScrollRef}
-                className="max-h-80 overflow-y-auto"
-            >
-                <EventsList filteredEvents={filteredEvents} />
-            </div>
-        </div>
-    );
-};
-
-export default RawEventsDisplay;
+networks:
+  app-network:
+    driver: bridge

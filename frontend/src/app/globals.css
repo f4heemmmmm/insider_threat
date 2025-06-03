@@ -120,3 +120,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px transparent inset !important;
+  -webkit-text-fill-color: #111827 !important; /* This matches your text-gray-900 */
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+input[type="email"],
+input[type="password"] {
+  background-color: transparent !important;
+  background-image: none !important;
+}

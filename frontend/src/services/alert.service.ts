@@ -1,6 +1,7 @@
-// src/services/alert.service.ts
+// frontend/src/services/alert.service.ts
 
 import { api } from "./api";
+import { handleApiError } from "./apiErrorHandle";
 import { Incident } from "@/types/incident.types";
 import { Alert, AlertsResponse } from "@/types/alert.types";
 
@@ -24,21 +25,27 @@ export const AlertService = {
         sortOrder: SortOrder = "desc",
         isUnderIncident?: boolean
     ): Promise<AlertsResponse> => {
-        const params: any = {
-            limit,
-            offset,
-            sortField,
-            sortOrder
-        };
-        
-        if (isUnderIncident !== undefined) {
-            params.isUnderIncident = isUnderIncident;
+        try {
+            const params: any = {
+                limit,
+                offset,
+                sortField,
+                sortOrder
+            };
+            
+            if (isUnderIncident !== undefined) {
+                params.isUnderIncident = isUnderIncident;
+            }
+            
+            const response = await api.get("/alert", {
+                params
+            });
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch alerts:', apiError);
+            throw apiError;
         }
-        
-        const response = await api.get("/alert", {
-            params
-        });
-        return response.data;
     },
 
     /**
@@ -59,22 +66,28 @@ export const AlertService = {
         sortOrder: SortOrder = "desc",
         isUnderIncident?: boolean
     ): Promise<AlertsResponse> => {
-        const params: any = {
-            query,
-            limit,
-            offset,
-            sortField,
-            sortOrder
-        };
-        
-        if (isUnderIncident !== undefined) {
-            params.isUnderIncident = isUnderIncident;
+        try {
+            const params: any = {
+                query,
+                limit,
+                offset,
+                sortField,
+                sortOrder
+            };
+            
+            if (isUnderIncident !== undefined) {
+                params.isUnderIncident = isUnderIncident;
+            }
+            
+            const response = await api.get("/alert/search", {
+                params
+            });
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to search alerts:', apiError);
+            throw apiError;
         }
-        
-        const response = await api.get("/alert/search", {
-            params
-        });
-        return response.data;
     },
 
     /**
@@ -93,16 +106,22 @@ export const AlertService = {
         sortField: SortField = "datestr", 
         sortOrder: SortOrder = "desc"
     ): Promise<AlertsResponse> => {
-        const response = await api.get("/alert/date-range", {
-            params: {
-                startDate,
-                endDate,
-                user,
-                sortField,
-                sortOrder
-            },
-        });
-        return response.data;
+        try {
+            const response = await api.get("/alert/date-range", {
+                params: {
+                    startDate: startDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+                    endDate: endDate.toISOString().split('T')[0],
+                    user,
+                    sortField,
+                    sortOrder
+                },
+            });
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch alerts by date range:', apiError);
+            throw apiError;
+        }
     },
     
     /**
@@ -117,13 +136,19 @@ export const AlertService = {
         sortField: SortField = "datestr", 
         sortOrder: SortOrder = "desc"
     ): Promise<Alert[]> => {
-        const response = await api.get(`/alert/user/${user}`, {
-            params: {
-                sortField,
-                sortOrder
-            }
-        });
-        return response.data;
+        try {
+            const response = await api.get(`/alert/user/${encodeURIComponent(user)}`, {
+                params: {
+                    sortField,
+                    sortOrder
+                }
+            });
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch alerts by user:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -138,13 +163,19 @@ export const AlertService = {
         sortField: SortField = "datestr", 
         sortOrder: SortOrder = "desc"
     ): Promise<Alert[]> => {
-        const response = await api.get(`/alert/incident/${isUnderIncident}`, {
-            params: {
-                sortField,
-                sortOrder
-            }
-        });
-        return response.data;
+        try {
+            const response = await api.get(`/alert/incident/${isUnderIncident}`, {
+                params: {
+                    sortField,
+                    sortOrder
+                }
+            });
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch alerts under incident:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -152,13 +183,19 @@ export const AlertService = {
      * @returns Promise containing the total number of alerts
      */
     getAlertCount: async (): Promise<number> => {
-        const response = await api.get("/alert", {
-            params: {
-                limit: 1,
-                offset: 0,
-            },
-        });
-        return response.data.total;
+        try {
+            const response = await api.get("/alert", {
+                params: {
+                    limit: 1,
+                    offset: 0,
+                },
+            });
+            return response.data.total;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch alert count:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -167,8 +204,14 @@ export const AlertService = {
      * @returns Promise containing the alert data
      */
     getAlertByID: async (ID: string): Promise<Alert> => {
-        const response = await api.get(`/alert/${ID}`);
-        return response.data;
+        try {
+            const response = await api.get(`/alert/${encodeURIComponent(ID)}`);
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch alert by ID:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -178,11 +221,15 @@ export const AlertService = {
      */
     getIncidentForAlert: async (alertID: string): Promise<Incident | null> => {
         try {
-            const response = await api.get(`/alert/${alertID}/incident`);
+            const response = await api.get(`/alert/${encodeURIComponent(alertID)}/incident`);
             return response.data;
         } catch (error) {
-            console.error("Error fetching incident for alert:", error);
-            return null;
+            const apiError = handleApiError(error);
+            if (apiError.status === 404 || apiError.status === 204) {
+                return null; // No incident found for this alert
+            }
+            console.error("Error fetching incident for alert:", apiError);
+            throw apiError;
         }
     },
 
@@ -193,8 +240,14 @@ export const AlertService = {
      * @returns Promise containing the updated alert data
      */
     associateWithIncident: async (alertID: string, incidentID: string): Promise<Alert> => {
-        const response = await api.put(`/alert/${alertID}/associate/${incidentID}`);
-        return response.data;
+        try {
+            const response = await api.put(`/alert/${encodeURIComponent(alertID)}/associate/${encodeURIComponent(incidentID)}`);
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to associate alert with incident:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -209,13 +262,19 @@ export const AlertService = {
         sortField: SortField = "datestr",
         sortOrder: SortOrder = "desc"
     ): Promise<Alert[]> => {
-        const response = await api.get(`/alert/incident-id/${incidentID}`, {
-            params: {
-                sortField,
-                sortOrder
-            }
-        });
-        return response.data;
+        try {
+            const response = await api.get(`/alert/incident-id/${encodeURIComponent(incidentID)}`, {
+                params: {
+                    sortField,
+                    sortOrder
+                }
+            });
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch alerts by incident ID:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -228,15 +287,21 @@ export const AlertService = {
         sortField: SortField = "datestr", 
         sortOrder: SortOrder = "desc"
     ): Promise<Alert[]> => {
-        const params: any = {
-            sortField,
-            sortOrder
-        };
-        
-        const response = await api.get("/alert/all", {
-            params
-        });
-        return response.data;
+        try {
+            const params: any = {
+                sortField,
+                sortOrder
+            };
+            
+            const response = await api.get("/alert/all", {
+                params
+            });
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch all alerts:', apiError);
+            throw apiError;
+        }
     },
 
     /**
@@ -249,14 +314,20 @@ export const AlertService = {
         sortField: SortField = "datestr", 
         sortOrder: SortOrder = "desc"
     ): Promise<AlertsResponse> => {
-        const params: any = {
-            sortField,
-            sortOrder
-        };
-        
-        const response = await api.get("/alert/all/with-count", {
-            params
-        });
-        return response.data;
+        try {
+            const params: any = {
+                sortField,
+                sortOrder
+            };
+            
+            const response = await api.get("/alert/all/with-count", {
+                params
+            });
+            return response.data;
+        } catch (error) {
+            const apiError = handleApiError(error);
+            console.error('Failed to fetch all alerts with count:', apiError);
+            throw apiError;
+        }
     },
 };

@@ -1,80 +1,82 @@
 // frontend/src/components/layout/SidebarContext.tsx
 
 "use client";
-import { usePathname } from "next/navigation";
-import { SidebarContextType } from "./constants/interfaces";
-import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
 
-const SidebarContext = createContext<SidebarContextType>({
-    expanded: false,
-    setExpanded: () => {},
-    isMobile: false
-});
-
-export const useSidebar = () => useContext(SidebarContext);
-
-interface SidebarProviderProps {
-    children: ReactNode;
-}
+import { useContext, useState, useEffect } from "react";
+import { SidebarContextType, SidebarContext, SidebarProviderProps } from "./constants/interfaces";
 
 /**
- * SidebarProvider component that manages sidebar state including expansion,
- * mobile detection, and localStorage persistence. Handles responsive behavior
- * and automatic sidebar collapse on mobile navigation.
+ * SidebarProvider component that manages global sidebar state and responsive behavior.
+ * 
+ * This provider handles:
+ * - Sidebar expansion/collapse state management
+ * - Persistent state storage using localStorage
+ * - Mobile/desktop breakpoint detection and responsive behavior
+ * - Unified state interface for both Sidebar and MainContent components
+ * 
+ * The provider automatically detects screen size changes and maintains
+ * sidebar preferences across browser sessions for improved user experience.
  */
-export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) => {
-    const [expanded, setExpandedState] = useState(false);
+export const SidebarProvider = ({ children }: SidebarProviderProps) => {
+    const [isExpanded, setIsExpanded] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
-    const [mounted, setMounted] = useState(false);
-    const pathname = usePathname();
-
-    const setExpanded = (newExpanded: boolean) => {
-        setExpandedState(newExpanded);
-        if (typeof window !== "undefined") {
-            localStorage.setItem("sidebar-expanded", JSON.stringify(newExpanded));
-        }
-    };
 
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            try {
-                const saved = localStorage.getItem("sidebar-expanded");
-                if (saved !== null) {
-                    const savedExpanded = JSON.parse(saved);
-                    setExpandedState(savedExpanded);
-                }
-            } catch (error) {
-                console.warn("Failed to load sidebar state from localStorage:", error);
-            }
+        const saved = localStorage.getItem("sidebar-expanded");
+        if (saved !== null) {
+            setIsExpanded(JSON.parse(saved));
         }
-        setMounted(true);
     }, []);
 
     useEffect(() => {
+        /**
+         * Detects mobile screen size based on Tailwind's lg breakpoint (1024px).
+         * Updates state when window is resized to maintain responsive behavior.
+         */
         const checkMobile = () => {
-            const mobile = window.innerWidth < 1024;
-            setIsMobile(mobile);
+            setIsMobile(window.innerWidth < 1024);
         };
-        
+
         checkMobile();
         window.addEventListener("resize", checkMobile);
         
         return () => window.removeEventListener("resize", checkMobile);
     }, []);
-    
+
     useEffect(() => {
-        if (isMobile && expanded) {
-            setExpanded(false);
-        }
-    }, [pathname, isMobile, expanded]);
-    
-    if (!mounted) {
-        return null;
-    }
-    
+        localStorage.setItem("sidebar-expanded", JSON.stringify(isExpanded));
+    }, [isExpanded]);
+
+    const toggleSidebar = () => setIsExpanded(prev => !prev);
+    const expandSidebar = () => setIsExpanded(true);
+    const collapseSidebar = () => setIsExpanded(false);
+
+    const value = {
+        isExpanded,
+        toggleSidebar,
+        expandSidebar,
+        collapseSidebar,
+        expanded: isExpanded,
+        isMobile,
+    };
+
     return (
-        <SidebarContext.Provider value = {{ expanded, setExpanded, isMobile }}>
+        <SidebarContext.Provider value={value}>
             {children}
         </SidebarContext.Provider>
     );
+};
+
+/**
+ * Custom hook for accessing sidebar context state and methods.
+ * 
+ * @throws {Error} When used outside of SidebarProvider
+ * @returns {SidebarContextType} Sidebar state and control methods
+ */
+export const useSidebar = (): SidebarContextType => {
+    const context = useContext(SidebarContext);
+    if (!context) {
+        throw new Error("useSidebar must be used within a SidebarProvider");
+    }
+    return context;
 };

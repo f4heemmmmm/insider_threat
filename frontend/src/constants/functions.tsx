@@ -1,7 +1,8 @@
 // src/constants/functions.tsx
-import { IndexedSharePointEvent } from "@/constants/interface";
+
 import { Alert } from '@/types/alert.types';
 import { TimelineEvent } from "@/components/incidents/constants/interfaces";
+import { IndexedSharePointEvent } from '@/components/alerts/constants/interfaces';
 
 export const getScoreSeverity = (score: number): 'low' | 'medium' | 'high' | 'critical' => {
   if (score >= 90) return 'critical';

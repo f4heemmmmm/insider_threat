@@ -29,9 +29,9 @@ export const RelatedAlertsModal: React.FC<RelatedAlertsModalProps> = ({ isOpen, 
             <div className = "fixed inset-0 backdrop-blur-md transition-opacity" onClick = {handleBackdropClick}>
                 {/* MODAL */}
                 <div className = "flex min-h-full items-center justify-center p-4">
-                    <div className = "relative bg-white border border-gray-300 rounded-lg shadow-xl max-w-6xl w-full max-h-[80vh] flex flex-col">
+                    <div className = "relative bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[80vh] flex flex-col">
                         {/* HEADER */}
-                        <div className = "flex items-center justify-between p-6 border border-b border-gray-200">
+                        <div className = "flex items-center justify-between p-6">
                             <div className = "flex items-center">
                                 <div>
                                     <h2 className = "text-xl font-semibold text-gray-900"> Related Alerts </h2>
