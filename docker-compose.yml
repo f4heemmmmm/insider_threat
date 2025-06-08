@@ -1,13 +1,13 @@
-# insider_threat/docker-compose.yml
-# Production configuration for Insider Threat Detection System
-# This configuration sets up a complete production environment with PostgreSQL database,
-# Node.js backend API, and Next.js frontend application
+# Production and Development configuration for Insider Threat Detection System
+# Enhanced with hot reloading support for development
+# docker.compose.yml
+
 services:
     # PostgreSQL Database Service
     # Provides persistent data storage for the application
     database:
         image: postgres:15-alpine
-        container_name: insider-threat-db-prod
+        container_name: insider-threat-db
         
         # Database configuration
         environment:
@@ -38,9 +38,10 @@ services:
         build: 
             context: ./backend
             dockerfile: Dockerfile
-            target: production
+            # Use development stage for hot reloading in dev mode
+            target: ${BUILD_TARGET:-production}
         
-        container_name: insider-threat-backend-prod
+        container_name: insider-threat-backend
         
         environment:
             # Database connection settings
@@ -51,15 +52,15 @@ services:
             DATABASE_NAME: insider_threat
             
             # Node.js runtime configuration
-            NODE_ENV: production
+            NODE_ENV: ${NODE_ENV:-production}
             PORT: 3000
             
             # JWT Authentication - Critical: Must be set securely in production
-            JWT_SECRET: ${JWT_SECRET}
+            JWT_SECRET: ${JWT_SECRET:-your-dev-jwt-secret}
             JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
             
             # Cross-Origin Resource Sharing configuration
-            FRONTEND_URL: ${FRONTEND_URL:-https://yourdomain.com}
+            FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
             
             # CSV file processing configuration
             CSV_DROP_PATH: /app/storage/csv/drop
@@ -78,12 +79,21 @@ services:
         
         restart: unless-stopped
         
-        # Mount storage directory for CSV file processing
+        # Mount volumes for hot reloading and CSV processing
         volumes:
-            - ./backend/storage:/app/storage
+            # Source code mount for hot reloading in development
+            - ${BACKEND_SOURCE_MOUNT:-./backend/storage}:/app/storage
+            # Conditional source mount - only in development
+            - ./backend/src:/app/src:${SOURCE_MOUNT_MODE:-ro}
+            - ./backend/package.json:/app/package.json:${SOURCE_MOUNT_MODE:-ro}
+            - ./backend/tsconfig.json:/app/tsconfig.json:${SOURCE_MOUNT_MODE:-ro}
+            - ./backend/nest-cli.json:/app/nest-cli.json:${SOURCE_MOUNT_MODE:-ro}
         
         networks:
             - app-network
+        
+        # Override command for development hot reloading
+        command: ${BACKEND_COMMAND:-node dist/main}
         
         # Health check for backend service availability
         healthcheck:
@@ -99,14 +109,19 @@ services:
         build: 
             context: ./frontend
             dockerfile: Dockerfile
+            # Use development stage for hot reloading in dev mode
+            target: ${BUILD_TARGET:-production}
         
-        container_name: insider-threat-frontend-prod
+        container_name: insider-threat-frontend
         
         environment:
             # API endpoint configuration for frontend-backend communication
             NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
-            NODE_ENV: production
+            NODE_ENV: ${NODE_ENV:-production}
             PORT: 3000
+            # Enable webpack HMR for development
+            WATCHPACK_POLLING: ${WATCHPACK_POLLING:-false}
+            CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING:-false}
         
         # Expose frontend on different port to avoid conflicts
         ports:
@@ -119,8 +134,25 @@ services:
         
         restart: unless-stopped
         
+        # Mount volumes for hot reloading in development
+        volumes:
+        # Mount source code for hot reloading - CORRECTED PATHS
+        - ./frontend/src:/app/src:${SOURCE_MOUNT_MODE:-ro}
+        - ./frontend/public:/app/public:${SOURCE_MOUNT_MODE:-ro}
+        - ./frontend/package.json:/app/package.json:${SOURCE_MOUNT_MODE:-ro}
+        - ./frontend/next.config.ts:/app/next.config.ts:${SOURCE_MOUNT_MODE:-ro}
+        - ./frontend/tsconfig.json:/app/tsconfig.json:${SOURCE_MOUNT_MODE:-ro}
+        - ./frontend/tailwind.config.ts:/app/tailwind.config.ts:${SOURCE_MOUNT_MODE:-ro}
+        - ./frontend/postcss.config.mjs:/app/postcss.config.mjs:${SOURCE_MOUNT_MODE:-ro}
+        # Exclude node_modules and build directories
+        - /app/node_modules
+        - /app/.next
+        
         networks:
             - app-network
+        
+        # Override command for development hot reloading
+        command: ${FRONTEND_COMMAND:-npm start}
 
 # Named volumes for data persistence
 volumes:

@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { DataCardProps } from "./constants/interfaces";
 
-export const DataCard: React.FC<DataCardProps> = ({ title, value, suffix = "", href, className }) => {
+export const DataCard: React.FC<DataCardProps> = ({ title, subtitle, value, suffix = "", href, className }) => {
     // Format values with commas and suffix
     const formatValue = (num: number): string => {
         if (typeof num !== "number" || isNaN(num)) {
@@ -28,12 +28,20 @@ export const DataCard: React.FC<DataCardProps> = ({ title, value, suffix = "", h
             <div className = "flex flex-col items-center justify-center w-full">
                 {/* CONTENT */}
                 <div className = "text-center">
+                    {/* NUMBER */}
                     <p className = "text-4xl sm:text-5xl font-thin text-gray-800 mb-3">
                         {formatValue(value)}
                     </p>
+                    {/* TITLE */}
                     <h2 className = "text-base sm:text-md font-medium text-gray-700">
                         {title}
                     </h2>
+                    {/* SUBTITLE (DATE RANGE) */}
+                    {subtitle && (
+                        <p className = "text-sm font-light text-gray-500 mt-1">
+                            {subtitle}
+                        </p>
+                    )}
                 </div>
             </div>
         </div>

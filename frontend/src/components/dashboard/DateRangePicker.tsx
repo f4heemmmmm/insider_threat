@@ -1,9 +1,27 @@
 // frontend/src/components/dashboard/DateRangePicker.tsx
 
 import React, { useRef, useState, useEffect } from "react";
-import { DateRangePickerProps } from "./constants/interfaces";
 
-export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, endDate, onStartDateChange, onEndDateChange, onPresetSelect}) => {
+// Update the interface to include earliestDate and onReset
+export interface DateRangePickerProps {
+    startDate: Date;
+    endDate: Date;
+    onStartDateChange: (date: Date) => void;
+    onEndDateChange: (date: Date) => void;
+    onPresetSelect: (days: number) => void;
+    onReset?: () => void; // Optional reset handler
+    earliestDate?: Date; // Optional earliest date for minimum constraint
+}
+
+export const DateRangePicker: React.FC<DateRangePickerProps> = ({ 
+    startDate, 
+    endDate, 
+    onStartDateChange, 
+    onEndDateChange, 
+    onPresetSelect,
+    onReset,
+    earliestDate
+}) => {
 
     // Store initial dates when component first mounts (for reset preset)
     const initialDatesRef = useRef<{ startDate: Date, endDate: Date }>({
@@ -21,6 +39,12 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, end
         if (start > today) {
             newErrors.startDate = "Start date cannot be in the future!";
         }
+
+        // Validate start date is not before earliest date
+        if (earliestDate && start < earliestDate) {
+            newErrors.startDate = "Start date cannot be before the earliest available date!";
+        }
+
         // Validate end date is not before the start date
         if (end < start) {
             newErrors.endDate = "End date cannot be before the start date!";
@@ -35,7 +59,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, end
     // Ensures dates are valid when the component updates
     useEffect(() => {
         validateDates(startDate, endDate);
-    }, [startDate, endDate]);
+    }, [startDate, endDate, earliestDate]);
 
     // Format date to YYYY-MM-DD format for input field
     function formatDateForInput(date: Date): string {
@@ -89,10 +113,15 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, end
         return date;
     }
 
-    // When users click on the reset button to reset the dates to the initial dates
+    // When users click on the reset button to reset the dates
     const handleReset = () => {
-        onStartDateChange(new Date(initialDatesRef.current.startDate.getTime()));
-        onEndDateChange(new Date(initialDatesRef.current.endDate.getTime()));
+        if (onReset) {
+            onReset(); // Use the reset handler from page.tsx
+        } else {
+            // Fallback to internal reset if no handler provided
+            onStartDateChange(new Date(initialDatesRef.current.startDate.getTime()));
+            onEndDateChange(new Date(initialDatesRef.current.endDate.getTime()));
+        }
         setErrors({});
     }
 
@@ -123,6 +152,13 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, end
         // Check if the date is in the future
         if (newStartDate > today) {
             updatedErrors.startDate = "Start date cannot be in the future!";
+            setErrors(updatedErrors);
+            return;   
+        }
+
+        // Check if the date is before earliest date
+        if (earliestDate && newStartDate < earliestDate) {
+            updatedErrors.startDate = "Start date cannot be before the earliest available date!";
             setErrors(updatedErrors);
             return;   
         }
@@ -183,6 +219,9 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, end
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayFormatted = formatDateForInput(today);
+    
+    // Calculate minimum date (earliest date or a reasonable default)
+    const minDate = earliestDate ? formatDateForInput(earliestDate) : "2020-01-01";
 
     const presets = [
         {
@@ -210,6 +249,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, end
                             type = "date"
                             value = {startDateInput}
                             onChange = {handleStartDateChange}
+                            min = {minDate}
                             max = {todayFormatted}
                             className = {`text-xs font-semibold text-gray-500 px-3 py-2 border rounded-md ${
                                 errors.startDate ? "border-red-500" : "border-gray-300"

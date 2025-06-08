@@ -2,16 +2,86 @@
 
 import { ArrowRight } from "lucide-react";
 import React, { useState, useEffect }  from "react";
-import { IncidentWithAlertCount } from "./constants/interfaces";
-import { RecentIncidentsTableProps } from "./constants/interfaces";
+import { IncidentWithAlertCount, RecentIncidentsTableProps } from "./constants/interfaces";
 import { formatID, formatUsername } from "./constants/functions";
 
 import { AlertService } from "@/services/alert.service";
 
-export const RecentIncidentsTable: React.FC<RecentIncidentsTableProps> = ({ loading, recentIncidents }) => {
+// Updated interface to include date filtering props
+interface RecentIncidentsTablePropsLocal {
+    loading: boolean;
+    recentIncidents: IncidentWithAlertCount[];
+    startDate?: Date;
+    endDate?: Date;
+    isFiltered?: boolean;
+}
+
+export const RecentIncidentsTable: React.FC<RecentIncidentsTablePropsLocal> = ({ 
+    loading, 
+    recentIncidents, 
+    startDate, 
+    endDate, 
+    isFiltered = false 
+}) => {
     const [incidents, setIncidents] = useState<IncidentWithAlertCount[]>([]);
     const [alertCounts, setAlertCounts] = useState<Record<string, number>>({});
     const [fetchingAlertCounts, setFetchingAlertCounts] = useState<boolean>(false);
+
+    // Filter incidents based on date range
+    const filterIncidentsByDateRange = (incidents: IncidentWithAlertCount[]): IncidentWithAlertCount[] => {
+        if (!startDate || !endDate || !isFiltered) {
+            return incidents;
+        }
+
+        return incidents.filter(incident => {
+            const incidentStartDate = new Date(incident.windows_start);
+            const incidentEndDate = new Date(incident.windows_end);
+            
+            // Check if the incident overlaps with the selected date range
+            // An incident is included if it starts before the end date and ends after the start date
+            return incidentStartDate <= endDate && incidentEndDate >= startDate;
+        });
+    };
+
+    // Generate dynamic title based on filtering state
+    const getTableTitle = (): string => {
+        if (!isFiltered || !startDate || !endDate) {
+            return "Recent Incidents";
+        }
+
+        const formatDate = (date: Date): string => {
+            return date.toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        };
+
+        return `Incidents from ${formatDate(startDate)} to ${formatDate(endDate)}`;
+    };
+
+    // Generate dynamic empty state message
+    const getEmptyStateMessage = (): { title: string; subtitle: string } => {
+        if (!isFiltered || !startDate || !endDate) {
+            return {
+                title: "No incidents found.",
+                subtitle: "Recent incidents will appear here."
+            };
+        }
+
+        const formatDate = (date: Date): string => {
+            return date.toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        };
+
+        return {
+            title: "No incidents found for the selected period.",
+            subtitle: `No incidents shown for the duration of ${formatDate(startDate)} to ${formatDate(endDate)}.`
+        };
+    };
 
     // Fetch the alert counts for each incident
     useEffect(() => {
@@ -33,8 +103,9 @@ export const RecentIncidentsTable: React.FC<RecentIncidentsTableProps> = ({ load
                     await Promise.all(promises);
                     setAlertCounts(counts);
 
-                    // Merge the incident data with alert counts
-                    const incidentsWithCounts = recentIncidents.map(incident => ({
+                    // Filter incidents by date range and merge with alert counts
+                    const filteredIncidents = filterIncidentsByDateRange(recentIncidents);
+                    const incidentsWithCounts = filteredIncidents.map(incident => ({
                         ...incident,
                         alertCount: counts[incident.ID] || 0
                     }));
@@ -48,14 +119,18 @@ export const RecentIncidentsTable: React.FC<RecentIncidentsTableProps> = ({ load
             };   
             fetchAlertCounts();
         } else {
-            setIncidents(recentIncidents);
+            // If no incidents or still loading, filter the empty array
+            const filteredIncidents = filterIncidentsByDateRange(recentIncidents);
+            setIncidents(filteredIncidents);
         }
-    }, [recentIncidents, loading]);
+    }, [recentIncidents, loading, startDate, endDate, isFiltered]);
+
+    const emptyState = getEmptyStateMessage();
 
     return (
         <div className = "col-span-1 rounded-lg bg-white p-6 shadow-md md:col-span-2">
             <div className = "flex items-center justify-between mb-6">
-                <h3 className = "text-xl font-light text-gray-800"> Recent Incidents </h3>
+                <h3 className = "text-xl font-light text-gray-800">{getTableTitle()}</h3>
                 <a
                     href = "/incidents"
                     className = "inline-flex items-center text-sm font-medium text-blue-900 hover:text-pink-800 gap-2"
@@ -86,8 +161,8 @@ export const RecentIncidentsTable: React.FC<RecentIncidentsTableProps> = ({ load
                                 d = "M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                             />
                         </svg>
-                        <h3 className = "mt-2 text-lg font-medium text-gray-900"> No incidents found. </h3>
-                        <p className = "mt-1 text-sm text-gray-500"> Recent incidents will appear here. </p>
+                        <h3 className = "mt-2 text-lg font-medium text-gray-900">{emptyState.title}</h3>
+                        <p className = "mt-1 text-sm text-gray-500">{emptyState.subtitle}</p>
                     </div>
                 ) : (
                     <table className = "min-w-full divide-y divide-gray-200">
@@ -160,7 +235,7 @@ export const RecentIncidentsTable: React.FC<RecentIncidentsTableProps> = ({ load
                                                 year: "numeric",
                                                 hour: "2-digit",
                                                 minute: "2-digit"
-                                            })}
+                            })}
                                         </div>
                                     </td>
                                     <td className = "px-6 py-4 whitespace-nowrap">

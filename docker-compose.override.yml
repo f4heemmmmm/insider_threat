@@ -1,0 +1,54 @@
+# docker-compose.override.yml
+# Development overrides (automatically loaded by docker-compose)
+
+services:
+  backend:
+    # Use development build target
+    build:
+      target: development
+    
+    # Mount source code for hot reloading
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/test:/app/test
+      - ./backend/package.json:/app/package.json
+      - ./backend/tsconfig.json:/app/tsconfig.json
+      - ./backend/nest-cli.json:/app/nest-cli.json
+      # Storage volume for CSV processing
+      - ./backend/storage:/app/storage
+    
+    # Development command
+    command: npm run start:dev
+    
+    # Development environment
+    environment:
+      NODE_ENV: development
+
+  frontend:
+    # Use development build target
+    build:
+      target: development
+    
+    # Mount source code for hot reloading - CORRECTED PATHS
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/package.json:/app/package.json
+      - ./frontend/next.config.ts:/app/next.config.ts
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - ./frontend/tailwind.config.ts:/app/tailwind.config.ts
+      - ./frontend/postcss.config.mjs:/app/postcss.config.mjs
+      - ./frontend/components.json:/app/components.json
+      # Let Next.js manage its own .next build directory
+      - /app/node_modules
+      - /app/.next
+    
+    # Development command
+    command: npm run dev
+    
+    # Development environment
+    environment:
+      NODE_ENV: development
+      # Force polling for file changes in Docker
+      WATCHPACK_POLLING: 'true'
+      CHOKIDAR_USEPOLLING: 'true'

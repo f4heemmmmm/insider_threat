@@ -121,12 +121,13 @@
   }
 }
 
+/* Form autofill styles */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 30px transparent inset !important;
-  -webkit-text-fill-color: #111827 !important; /* This matches your text-gray-900 */
+  -webkit-text-fill-color: #111827 !important;
   background-color: transparent !important;
   background-image: none !important;
 }
@@ -135,4 +136,33 @@ input[type="email"],
 input[type="password"] {
   background-color: transparent !important;
   background-image: none !important;
+}
+
+/* TSParticles specific styles */
+.particles-container {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: auto !important;
+}
+
+.particles-container canvas {
+  display: block !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure particles don't interfere with form interactions */
+#tsparticles-bg {
+  pointer-events: none !important;
+}
+
+#tsparticles-bg canvas {
+  pointer-events: auto !important;
 }

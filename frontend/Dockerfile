@@ -1,45 +1,91 @@
 # Multi-stage Dockerfile for Next.js Frontend Application
-# Optimized for production deployment with security hardening
+# Supports both development (with hot-reload) and production environments
+
+# =============================================================================
+# BASE STAGE
+# Common base image for all stages to ensure consistency
+# =============================================================================
+FROM node:18-alpine AS base
+
+# Install essential tools
+RUN apk add --no-cache curl
+
+# Set working directory
+WORKDIR /app
+
 
 # =============================================================================
 # DEPENDENCIES STAGE
 # Install and cache dependencies separately for better layer caching
 # =============================================================================
-FROM node:18-alpine AS dependencies
+FROM base AS dependencies
 
-# Set working directory
-WORKDIR /app
-
-# Copy dependency configuration files first to leverage Docker layer caching
-# If package files haven't changed, this layer can be reused
+# Copy dependency configuration files
 COPY package*.json ./
 
-# Install dependencies with legacy peer deps flag for compatibility
-# Using npm ci for faster, reliable, reproducible builds
-RUN npm ci --legacy-peer-deps --only=production && \
-    npm cache clean --force
+# Install all dependencies including dev dependencies
+RUN npm ci --legacy-peer-deps
+
+# Create a separate stage for production dependencies
+FROM base AS prod-dependencies
+
+# Copy dependency configuration files
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --legacy-peer-deps --omit=dev
 
 
 # =============================================================================
-# BUILD STAGE  
+# DEVELOPMENT STAGE
+# Optimized for hot-reload with Next.js Fast Refresh
+# =============================================================================
+FROM base AS development
+
+# Copy all dependencies from dependencies stage
+COPY --from=dependencies /app/node_modules ./node_modules
+
+# Copy package files and Next.js config
+COPY package*.json ./
+COPY next.config.ts ./
+COPY tsconfig.json ./
+
+# Copy any other config files that might exist
+COPY tailwind.config.* ./
+COPY postcss.config.* ./
+
+# Set development environment
+ENV NODE_ENV=development
+ENV PORT=3000
+
+# Enable Next.js telemetry in development (optional - can be disabled)
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Expose the application port
+EXPOSE 3000
+
+# Health check for development
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Development command with hot-reload
+# Source files will be mounted as volumes
+CMD ["npm", "run", "dev"]
+
+
+# =============================================================================
+# BUILD STAGE
 # Compile and build the Next.js application for production
 # =============================================================================
-FROM node:18-alpine AS builder
+FROM base AS builder
 
-# Set working directory
-WORKDIR /app
-
-# Copy dependency files
-COPY package*.json ./
-
-# Install all dependencies including dev dependencies needed for build
-RUN npm ci --legacy-peer-deps
+# Copy all dependencies
+COPY --from=dependencies /app/node_modules ./node_modules
 
 # Copy entire source code for compilation
 COPY . .
 
-# Build the Next.js application for production
-# This creates optimized static files and server-side code
+# Build the Next.js application
 RUN npm run build
 
 
@@ -47,48 +93,39 @@ RUN npm run build
 # PRODUCTION STAGE
 # Final optimized image with minimal footprint and security hardening
 # =============================================================================
-FROM node:18-alpine AS production
+FROM base AS production
 
-# Set working directory
-WORKDIR /app
-
-# Security hardening: Create dedicated system users for running the application
-# Using system users with specific UIDs follows security best practices
+# Security hardening: Create dedicated system users
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy production dependencies from dependencies stage
-COPY --from=dependencies /app/node_modules ./node_modules
+# Copy production dependencies from prod-dependencies stage
+COPY --from=prod-dependencies /app/node_modules ./node_modules
 
-# Copy built Next.js application from builder stage
-# This includes optimized static assets and server-side rendered pages
-COPY --from=builder /app/.next ./.next
+# Copy built application from builder stage
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/package*.json ./
 
-# Optional: Copy any additional configuration files if needed
-# COPY --from=builder /app/next.config.js ./
+# Copy package.json for scripts
+COPY package*.json ./
 
-# Security: Change ownership of all application files to non-root user
-# Ensures the application runs with minimal privileges
+# Change ownership to non-root user
 RUN chown -R nextjs:nodejs /app
 
-# Switch to non-root user for security
-# All subsequent operations and the final CMD will run as this user
+# Switch to non-root user
 USER nextjs
 
-# Expose the application port for external access
+# Expose the application port
 EXPOSE 3000
 
-# Set environment variable for port configuration
-# Next.js will use this to determine which port to bind to
-ENV PORT=3000
+# Set production environment
 ENV NODE_ENV=production
+ENV PORT=3000
 
-# Health check to ensure the application is running properly
+# Health check for production
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3000/ || exit 1
+    CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Production command: Start the built Next.js application
-# Uses the optimized production server
-CMD ["npm", "start"]
+# Production command using standalone server
+CMD ["node", "server.js"]

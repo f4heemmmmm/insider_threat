@@ -49,14 +49,58 @@ export default function Home(): JSX.Element {
     // Date Ranges (for Date Range Picker)
     const [startDate, setStartDate] = useState<Date>(() => {
         const date = new Date();
-        date.setDate(date.getDate() - 7);  // Default to last 1 week
+        date.setDate(date.getDate() - 7);  // Temporary default, will be updated after data loads
         return date;
     });
     const [endDate, setEndDate] = useState<Date>(new Date());
+    const [earliestIncidentDate, setEarliestIncidentDate] = useState<Date | undefined>();
+    const [isDateRangeFiltered, setIsDateRangeFiltered] = useState<boolean>(false);
 
     // Loading States
     const [loading, setLoading] = useState<boolean>(true);
     const [chartsLoading, setChartsLoading] = useState<boolean>(true);
+
+    // Helper function to find the earliest incident date
+    const findEarliestIncidentDate = (incidents: Incident[]): Date | null => {
+        if (incidents.length === 0) return null;
+        
+        // Find the earliest date among both windows_start and windows_end
+        const allDates = incidents.flatMap(incident => [
+            new Date(incident.windows_start),
+            new Date(incident.windows_end)
+        ]);
+        
+        const earliestDate = new Date(Math.min(...allDates.map(date => date.getTime())));
+        
+        // Set the time to the beginning of the day to avoid timezone issues
+        earliestDate.setHours(0, 0, 0, 0);
+        
+        return earliestDate;
+    };
+
+    // Helper function to filter incidents by date range
+    const filterIncidentsByDateRange = (incidents: Incident[], startDate: Date, endDate: Date): Incident[] => {
+        return incidents.filter(incident => {
+            const incidentStartDate = new Date(incident.windows_start);
+            const incidentEndDate = new Date(incident.windows_end);
+            
+            // Check if the incident overlaps with the selected date range
+            // An incident is included if it starts before the end date and ends after the start date
+            return incidentStartDate <= endDate && incidentEndDate >= startDate;
+        });
+    };
+
+    // Helper function to get date range text for display
+    const getDateRangeText = (startDate: Date, endDate: Date): string => {
+        const formatDate = (date: Date): string => {
+            return date.toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        };
+        return `${formatDate(startDate)} to ${formatDate(endDate)}`;
+    };
 
     // Fetch the basic dashboard data
     const fetchDashboardData = async (): Promise<void> => {
@@ -69,11 +113,22 @@ export default function Home(): JSX.Element {
                 AlertService.getAllAlerts("alert_name", "asc"),
                 IncidentService.getAllIncidents("score", "desc"),
             ]);
+            
             setAllAlerts(allAlerts);
             setAllIncidents(allIncidents);
             setStatisticsData(dashboardStats);
             setRecentAlerts(alertsResponse.alerts);
             setRecentIncidents(incidentsResponse.incidents);
+            
+            // Find and set the earliest incident date
+            const earliestDate = findEarliestIncidentDate(allIncidents);
+            if (earliestDate) {
+                setEarliestIncidentDate(earliestDate);
+                // Update the start date to be the earliest incident date
+                setStartDate(earliestDate);
+                // Since we're setting to earliest date on load, consider this as "default" not filtered
+                setIsDateRangeFiltered(false);
+            }
             
         } catch (error) {
             console.error("Error fetching dashboard data:", error);
@@ -107,9 +162,43 @@ export default function Home(): JSX.Element {
     const handlePresetSelect = (days: number): void => {
         const newStartDate = new Date();
         newStartDate.setDate(newStartDate.getDate() - days);
-        setStartDate(newStartDate);
+        
+        // Ensure the new start date is not before the earliest incident date
+        if (earliestIncidentDate && newStartDate < earliestIncidentDate) {
+            setStartDate(earliestIncidentDate);
+        } else {
+            setStartDate(newStartDate);
+        }
         setEndDate(new Date());
+        // Mark as filtered since user actively selected a preset
+        setIsDateRangeFiltered(true);
     }
+
+    // Handle manual date changes
+    const handleStartDateChange = (date: Date): void => {
+        setStartDate(date);
+        // Mark as filtered if the date is different from earliest incident date
+        setIsDateRangeFiltered(earliestIncidentDate ? date.getTime() !== earliestIncidentDate.getTime() : true);
+    };
+
+    const handleEndDateChange = (date: Date): void => {
+        setEndDate(date);
+        // Mark as filtered if the end date is not today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const selectedDate = new Date(date);
+        selectedDate.setHours(0, 0, 0, 0);
+        setIsDateRangeFiltered(selectedDate.getTime() !== today.getTime() || isDateRangeFiltered);
+    };
+
+    // Handle reset to default (earliest incident date to today)
+    const handleResetDateRange = (): void => {
+        if (earliestIncidentDate) {
+            setStartDate(earliestIncidentDate);
+            setEndDate(new Date());
+            setIsDateRangeFiltered(false); // Reset to default state
+        }
+    };
 
     // Initial data fetch
     useEffect(() => {
@@ -127,14 +216,32 @@ export default function Home(): JSX.Element {
         fetchChartData();
     }, [startDate, endDate]);
 
-    // Calculate additional metrics
-    const alertsUnderIncident: number = allAlerts.filter(alert => alert.isUnderIncident).length;
+    // Calculate additional metrics (filtered by date range if applicable)
+    const filteredIncidents = isDateRangeFiltered ? filterIncidentsByDateRange(allIncidents, startDate, endDate) : allIncidents;
+    const filteredAlerts = allAlerts.filter(alert => alert.isUnderIncident);
+    
+    const alertsUnderIncident: number = filteredAlerts.length;
     const alertsPercentageUnderIncident: string = allAlerts.length > 0
         ? ((alertsUnderIncident / allAlerts.length) * 100).toFixed(2)
         : "0";
 
-    // Critical Severity Incidents (score >= 9)
-    const criticalSeverityIncidents: number = allIncidents.filter(incident => incident.score >= 9).length;
+    // Calculate severity metrics from filtered incidents
+    const lowSeverityIncidents: number = filteredIncidents.filter(incident => incident.score >= 0 && incident.score <= 3).length;
+    const mediumSeverityIncidents: number = filteredIncidents.filter(incident => incident.score >= 4 && incident.score <= 7).length;
+    const highSeverityIncidents: number = filteredIncidents.filter(incident => incident.score >= 8 && incident.score <= 10).length;
+
+    // Generate dynamic titles for data cards with better formatting
+    const getDataCardTitle = (baseTitle: string): string => {
+        return baseTitle; // Return just the base title
+    };
+
+    // Generate subtitle with date range for data cards
+    const getDataCardSubtitle = (): string | undefined => {
+        if (!isDateRangeFiltered) {
+            return undefined; // No subtitle for default state
+        }
+        return getDateRangeText(startDate, endDate);
+    };
 
     if (loading) {
         return (
@@ -162,9 +269,11 @@ export default function Home(): JSX.Element {
                         <DateRangePicker
                             startDate = {startDate}
                             endDate = {endDate}
-                            onStartDateChange = {setStartDate}
-                            onEndDateChange = {setEndDate}
+                            onStartDateChange = {handleStartDateChange}
+                            onEndDateChange = {handleEndDateChange}
                             onPresetSelect = {handlePresetSelect}
+                            onReset = {handleResetDateRange}
+                            earliestDate = {earliestIncidentDate}
                         />
                     </div>
                 </div>
@@ -172,38 +281,40 @@ export default function Home(): JSX.Element {
                 {/* GRID LAYOUT */}
                 <div className = "mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <div className = "grid grid-cols-1 gap-6 sm:grid-cols-2">
-                        {/* DATA CARD: TOTAL ALERTS */}
-                        <div className = "rounded-lg bg-white p-6 shadow-md transition-all hover:shadow-lg hover:scale-105 duration-300" style = {{ height: "240px" }}>
-                            <DataCard
-                                title = "Total Alerts"
-                                value = {allAlerts.length || 0}
-                                href = "/alerts"
-                                className = "bg-transparent"
-                            />
-                        </div>
                         {/* DATA CARD: TOTAL INCIDENTS */}
                         <div className = "rounded-lg bg-white p-6 shadow-md transition-all hover:shadow-lg hover:scale-105 duration-300" style = {{ height: "240px" }}>
                             <DataCard
                                 title = "Total Incidents"
-                                value = {allIncidents.length || 0}
+                                subtitle = {getDataCardSubtitle()}
+                                value = {filteredIncidents.length || 0}
                                 href = "/incidents"
                                 className = "bg-transparent"
                             />
                         </div>
-                        {/* DATA CARD: CRITICAL SEVERITY INCIDENTS */}
+                        {/* DATA CARD: LOW SEVERITY INCIDENTS */}
                         <div className = "rounded-lg bg-white p-6 shadow-md transition-all" style = {{ height: "240px" }}>
                             <DataCard
-                                title = "Critical Severity Incidents"
-                                value = {criticalSeverityIncidents}
+                                title = "Low Severity Incidents"
+                                subtitle = {getDataCardSubtitle()}
+                                value = {lowSeverityIncidents}
                                 className = "bg-transparent"
                             />
                         </div>
-                        {/* DATA CARD: PERCENTAGE OF ALERTS RELATED TO INCIDENTS */}
+                        {/* DATA CARD: MEDIUM SEVERITY INCIDENTS */}
                         <div className = "rounded-lg bg-white p-6 shadow-md transition-all" style = {{ height: "240px" }}>
                             <DataCard
-                                title = "Alerts Related to Incidents"
-                                value = {parseFloat(alertsPercentageUnderIncident)}
-                                suffix = "%"
+                                title = "Medium Severity Incidents"
+                                subtitle = {getDataCardSubtitle()}
+                                value = {mediumSeverityIncidents}
+                                className = "bg-transparent"
+                            />
+                        </div>
+                        {/* DATA CARD: HIGH SEVERITY INCIDENTS */}
+                        <div className = "rounded-lg bg-white p-6 shadow-md transition-all" style = {{ height: "240px" }}>
+                            <DataCard
+                                title = "High Severity Incidents"
+                                subtitle = {getDataCardSubtitle()}
+                                value = {highSeverityIncidents}
                                 className = "bg-transparent"
                             />
                         </div>
@@ -226,7 +337,13 @@ export default function Home(): JSX.Element {
 
                 <div className = "grid grid-cols-1 gap-4 md:grid-cols-3 mb-6">
                     {/* RECENT INCIDENTS TABLE */}
-                    <RecentIncidentsTable loading = {loading} recentIncidents = {recentIncidents} />
+                    <RecentIncidentsTable 
+                        loading = {loading} 
+                        recentIncidents = {recentIncidents}
+                        startDate = {startDate}
+                        endDate = {endDate}
+                        isFiltered = {isDateRangeFiltered}
+                    />
                     {/* MITRE TACTIC CHART */}
                     <div className = "col-span-1 rounded-lg bg-white p-6 shadow-md">
                         <h3 className = "mb-4 text-xl font-light text-gray-800"> MITRE Tactics Distribution (Alerts) </h3>
@@ -263,7 +380,7 @@ export default function Home(): JSX.Element {
                 <div className = "mt-6 p-4 text-center text-sm">
                     <div className = "flex flex-col md:flex-row justify-between items-center px-4">
                         <p className = "text-gray-500">
-                            Showing data from {startDate.toLocaleDateString()} to {endDate.toLocaleDateString()}
+                            Showing incidents from {startDate.toLocaleDateString()} to {endDate.toLocaleDateString()}
                         </p>
                         <div className = "flex items-center mt-2 md:mt-0">
                             <p className = "text-gray-500 mr-2"> Current Time: </p>
