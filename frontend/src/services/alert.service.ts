@@ -105,7 +105,7 @@ export const AlertService = {
         user?: string,
         sortField: SortField = "datestr", 
         sortOrder: SortOrder = "desc"
-    ): Promise<AlertsResponse> => {
+    ): Promise<Alert[]> => {
         try {
             const response = await api.get("/alert/date-range", {
                 params: {

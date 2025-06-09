@@ -83,16 +83,58 @@ export const IncidentService = {
         sortField: SortField = "windows_start", 
         sortOrder: SortOrder = "desc"
     ): Promise<IncidentsResponse> => {
-        const response = await api.get("/incident/date-range", {
-            params: {
-                start_date: startDate,
-                end_date: endDate,
-                user,
-                sortField,
-                sortOrder
-            },
-        });
-        return response.data;
+        try {
+            const response = await api.get("/incident/date-range", {
+                params: {
+                    start_date: startDate.toISOString(),
+                    end_date: endDate.toISOString(),
+                    user
+                }
+            });
+            
+            // Backend returns direct array of incidents
+            const incidents = Array.isArray(response.data) ? response.data : [];
+            
+            // Apply frontend sorting since backend endpoint doesn't support it
+            const sortedIncidents = incidents.sort((a, b) => {
+                let aValue: any, bValue: any;
+                
+                switch (sortField) {
+                    case "windows_start":
+                        aValue = new Date(a.windows_start);
+                        bValue = new Date(b.windows_start);
+                        break;
+                    case "score":
+                        aValue = a.score;
+                        bValue = b.score;
+                        break;
+                    case "user":
+                        aValue = a.user;
+                        bValue = b.user;
+                        break;
+                    default:
+                        aValue = new Date(a.windows_start);
+                        bValue = new Date(b.windows_start);
+                }
+                
+                if (sortOrder === "asc") {
+                    return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+                } else {
+                    return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+                }
+            });
+            
+            return {
+                incidents: sortedIncidents,
+                total: sortedIncidents.length
+            };
+        } catch (error) {
+            console.error('Failed to fetch incidents by date range:', error);
+            return {
+                incidents: [],
+                total: 0
+            };
+        }
     },
     
     /**

@@ -125,8 +125,8 @@ export default function LoginPage() {
         let insiderIndex = 0;
         let guardIndex = 0;
         let scrambleCount = 0;
-        const maxScrambles = 8; // Number of scramble iterations per letter
-        const scrambleSpeed = 30; // Milliseconds between scrambles
+        const maxScrambles = 6; // Number of scramble iterations per letter
+        const scrambleSpeed = 20; // Milliseconds between scrambles
         const revealDelay = 200; // Delay before starting to reveal each letter
 
         const scrambleText = () => {

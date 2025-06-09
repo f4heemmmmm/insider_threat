@@ -22,7 +22,7 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({incident, alerts = []
             <div className = "bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
                 <div className = "font-mono text-sm font-medium flex flex-row gap-2">
                     <p className = "text-gray-900">
-                        Incident No:
+                        Incident ID:
                     </p>
                     <p className = "text-blue-700 font-light">
                         {incident.ID}
@@ -37,7 +37,7 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({incident, alerts = []
             <div className = "p-5 grid grid-cols-12 gap-3">
                 {/* SCORE */}
                 <div className = "col-span-12 sm:col-span-1">
-                    <div className = "text-xs font-semibold text-gray-700 mb-2"> Score </div>
+                    <div className = "text-sm font-semibold text-gray-700 mb-2"> Score </div>
                     <div className = "text-gray-600 text-2xl font-thin">
                         {incident.score}
                         <span className = "text-xs font-semibold text-gray-700">/10</span>

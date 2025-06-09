@@ -2,56 +2,126 @@
 
 "use client";
 
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useCallback, useRef } from "react";
 import { SidebarContextType, SidebarContext, SidebarProviderProps } from "./constants/interfaces";
 
 /**
  * SidebarProvider component that manages global sidebar state and responsive behavior.
  * 
  * This provider handles:
- * - Sidebar expansion/collapse state management
- * - Persistent state storage using localStorage
+ * - Sidebar expansion/collapse state management with proper SSR support
+ * - Persistent state storage using localStorage with hydration safety
  * - Mobile/desktop breakpoint detection and responsive behavior
  * - Unified state interface for both Sidebar and MainContent components
+ * - Prevents hydration mismatches and refresh state issues
  * 
  * The provider automatically detects screen size changes and maintains
- * sidebar preferences across browser sessions for improved user experience.
+ * sidebar preferences across browser sessions while handling SSR properly.
  */
 export const SidebarProvider = ({ children }: SidebarProviderProps) => {
-    const [isExpanded, setIsExpanded] = useState(true);
-    const [isMobile, setIsMobile] = useState(false);
+    // Initialize with a function to prevent hydration mismatches
+    const [isExpanded, setIsExpanded] = useState<boolean>(() => {
+        // During SSR, default to true
+        if (typeof window === 'undefined') return true;
+        
+        // During client-side initialization, read from localStorage immediately
+        try {
+            const saved = localStorage.getItem("sidebar-expanded");
+            return saved !== null ? JSON.parse(saved) : true;
+        } catch (error) {
+            console.warn("Failed to read sidebar state from localStorage:", error);
+            return true;
+        }
+    });
+    
+    const [isMobile, setIsMobile] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return window.innerWidth < 1024;
+    });
+    
+    // Track if we've completed initial client-side setup
+    const [isClientReady, setIsClientReady] = useState(false);
+    
+    // Use ref to track if we should save to localStorage
+    const shouldSaveRef = useRef(false);
 
-    useEffect(() => {
-        const saved = localStorage.getItem("sidebar-expanded");
-        if (saved !== null) {
-            setIsExpanded(JSON.parse(saved));
+    // Save to localStorage immediately when state changes
+    const setStoredSidebarState = useCallback((expanded: boolean): void => {
+        if (typeof window === 'undefined') return;
+        
+        try {
+            localStorage.setItem("sidebar-expanded", JSON.stringify(expanded));
+        } catch (error) {
+            console.warn("Failed to save sidebar state to localStorage:", error);
         }
     }, []);
 
+    // Handle client-side initialization
     useEffect(() => {
-        /**
-         * Detects mobile screen size based on Tailwind's lg breakpoint (1024px).
-         * Updates state when window is resized to maintain responsive behavior.
-         */
+        if (typeof window !== 'undefined' && !isClientReady) {
+            // Re-read from localStorage to ensure consistency
+            try {
+                const saved = localStorage.getItem("sidebar-expanded");
+                const savedState = saved !== null ? JSON.parse(saved) : true;
+                
+                // Only update if different from current state
+                if (savedState !== isExpanded) {
+                    setIsExpanded(savedState);
+                }
+            } catch (error) {
+                console.warn("Failed to read sidebar state:", error);
+            }
+            
+            // Now we can start saving changes
+            shouldSaveRef.current = true;
+            setIsClientReady(true);
+        }
+    }, [isClientReady, isExpanded]);
+
+    // Save to localStorage when state changes (no debounce)
+    useEffect(() => {
+        // Only save after initial client setup and if the change was user-initiated
+        if (shouldSaveRef.current && isClientReady) {
+            setStoredSidebarState(isExpanded);
+        }
+    }, [isExpanded, isClientReady, setStoredSidebarState]);
+
+    // Handle window resize with debouncing
+    useEffect(() => {
+        let timeoutId: NodeJS.Timeout;
+
         const checkMobile = () => {
-            setIsMobile(window.innerWidth < 1024);
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                const newIsMobile = window.innerWidth < 1024;
+                setIsMobile(newIsMobile);
+            }, 100);
         };
 
-        checkMobile();
-        window.addEventListener("resize", checkMobile);
-        
-        return () => window.removeEventListener("resize", checkMobile);
+        // Only set up resize listener on client
+        if (typeof window !== 'undefined') {
+            window.addEventListener("resize", checkMobile);
+            
+            return () => {
+                clearTimeout(timeoutId);
+                window.removeEventListener("resize", checkMobile);
+            };
+        }
     }, []);
 
-    useEffect(() => {
-        localStorage.setItem("sidebar-expanded", JSON.stringify(isExpanded));
-    }, [isExpanded]);
+    const toggleSidebar = useCallback(() => {
+        setIsExpanded(prev => !prev);
+    }, []);
 
-    const toggleSidebar = () => setIsExpanded(prev => !prev);
-    const expandSidebar = () => setIsExpanded(true);
-    const collapseSidebar = () => setIsExpanded(false);
+    const expandSidebar = useCallback(() => {
+        setIsExpanded(true);
+    }, []);
 
-    const value = {
+    const collapseSidebar = useCallback(() => {
+        setIsExpanded(false);
+    }, []);
+
+    const value: SidebarContextType = {
         isExpanded,
         toggleSidebar,
         expandSidebar,

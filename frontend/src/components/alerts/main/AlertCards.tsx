@@ -71,8 +71,9 @@ export const AlertCards: React.FC<AlertCardProps> = ({
                                     <h3 className = "text-base font-semibold text-gray-600"> Alert ID: </h3>
                                     <h3 className = "text-base font-light text-gray-500"> {alert.ID} </h3>
                                 </div>
-                                <div>
-                                    <span className = "font-semibold text-xl"> {alert.score} </span>
+                                <div className = "text-2xl font-light">
+                                    {alert.score}
+                                    <span className = "text-xs font-semibold text-gray-700">/10</span>
                                 </div>
                             </div>
                             <AlertMainDetails alert = {alert} />

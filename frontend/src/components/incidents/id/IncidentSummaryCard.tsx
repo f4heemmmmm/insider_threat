@@ -19,8 +19,7 @@ export const IncidentSummaryCard: React.FC<IncidentSummaryCardProps> = ({ incide
         <div className = "bg-white border border-gray-100 rounded-lg mb-6 shadow-lg">
             <div className = "px-8 py-6 border-b border-gray-50">
                 <div className = "flex items-center justify-between">
-                    <h2 className = "text-xl font-semibold text-gray-900 tracking-tight"> Incident Summary </h2>
-                    <span className = "text-sm font-medium text-gray-500 bg-gray-50 px-3 py-1 rounded-md">
+                    <span className = "text-sm font-medium text-gray-500 bg-gray-50 py-1 rounded-md">
                         ID: {incident.ID}
                     </span>
                 </div>
