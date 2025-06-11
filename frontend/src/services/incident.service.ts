@@ -252,7 +252,7 @@ export const IncidentService = {
      * @param userId - The unique identifier of the user
      * @returns Promise containing user display information
      */
-    getUserById: async (userId: string): Promise<{ firstName: string; lastName: string; email: string } | null> => {
+    getUserById: async (userId: string): Promise<{ first_name: string; last_name: string; email: string } | null> => {
         try {
             const response = await api.get(`/auth/users`);
             const users = response.data;
@@ -281,7 +281,7 @@ export const IncidentService = {
                         try {
                             const user = await IncidentService.getUserById(item.user_id);
                             if (user) {
-                                userDisplayName = `${user.firstName} ${user.lastName}`.trim() || user.email;
+                                userDisplayName = `${user.first_name} ${user.last_name}`.trim() || user.email;
                             }
                         } catch (error) {
                             console.warn(`Failed to fetch user details for ${item.user_id}:`, error);

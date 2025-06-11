@@ -42,7 +42,7 @@ export default function AlertDetailPage() {
                 setError(null);
                 
                 const response = await AlertService.getAlerts(1000, 0, "datestr", "desc");
-                const foundAlert = response.alerts.find(alert => alert.ID === alertID);
+                const foundAlert = response.alerts.find(alert => alert.id === alertID);
                 
                 if (!foundAlert) {
                     setError("Alert not found");
@@ -155,7 +155,7 @@ export default function AlertDetailPage() {
                                 <div className="hidden sm:flex items-center space-x-2">
                                     <span className="text-xl font-medium text-gray-700">Alert ID:</span>
                                     <span className="text-xl font-mono font-light text-gray-900 bg-gray-100 px-2 py-1 rounded">
-                                        {alert.ID}
+                                        {alert.id}
                                     </span>
                                 </div>
                             </div>
@@ -168,7 +168,7 @@ export default function AlertDetailPage() {
                     <div className="flex items-center space-x-2">
                         <span className="text-sm font-medium text-gray-700">Alert ID:</span>
                         <span className="text-sm font-mono font-semibold text-gray-900 bg-gray-100 px-2 py-1 rounded">
-                            {alert.ID}
+                            {alert.id}
                         </span>
                     </div>
                 </div>
@@ -217,7 +217,7 @@ export default function AlertDetailPage() {
                             <div className="p-6">
                                 <AlertRawEvents 
                                     evidence={alert.evidence} 
-                                    alertID={alert.ID} 
+                                    alertID={alert.id} 
                                     expandedEvidenceSection={expandedEvidenceSection} 
                                     toggleEvidenceSection={toggleEvidenceSection} 
                                 />

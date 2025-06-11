@@ -93,11 +93,11 @@ export const RecentIncidentsTable: React.FC<RecentIncidentsTablePropsLocal> = ({
                 try {
                     const promises = recentIncidents.map(async (incident) => {
                         try {
-                            const alerts = await AlertService.getAlertsByIncidentID(incident.ID);
-                            counts[incident.ID] = alerts.length;
+                            const alerts = await AlertService.getAlertsByIncidentID(incident.id);
+                            counts[incident.id] = alerts.length;
                         } catch (error) {
-                            console.error(`Error fetching alerts for incident: ${incident.ID}`, error);
-                            counts[incident.ID] = 0;
+                            console.error(`Error fetching alerts for incident: ${incident.id}`, error);
+                            counts[incident.id] = 0;
                         }
                     });
                     await Promise.all(promises);
@@ -107,7 +107,7 @@ export const RecentIncidentsTable: React.FC<RecentIncidentsTablePropsLocal> = ({
                     const filteredIncidents = filterIncidentsByDateRange(recentIncidents);
                     const incidentsWithCounts = filteredIncidents.map(incident => ({
                         ...incident,
-                        alertCount: counts[incident.ID] || 0
+                        alertCount: counts[incident.id] || 0
                     }));
                     
                     setIncidents(incidentsWithCounts);
@@ -191,17 +191,17 @@ export const RecentIncidentsTable: React.FC<RecentIncidentsTablePropsLocal> = ({
                         <tbody className = "bg-white divide-y divide-gray-200">
                             {incidents.slice (0, 5).map((incident) => (
                                 <tr
-                                    key = {incident.ID}
+                                    key = {incident.id}
                                     className = "hover:bg-gray-50 cursor-pointer transition-colors duration-300"
-                                    onClick = {() => window.location.href = `/incidents/${incident.ID}`}
+                                    onClick = {() => window.location.href = `/incidents/${incident.id}`}
                                 >
                                     <td className = "px-6 py-4 whitespace-nowrap">
                                         <a
-                                            href = {`/incidents/${incident.ID}`}
+                                            href = {`/incidents/${incident.id}`}
                                             className = "text-sm font-light text-blue-600 hover:text-blue-800 hover:underline"
                                             onClick = {(e) => e.stopPropagation()}
                                         >
-                                            {formatID(incident.ID)}
+                                            {formatID(incident.id)}
                                         </a>
                                     </td>
                                     <td className = "px-6 py-4 whitespace-nowrap">

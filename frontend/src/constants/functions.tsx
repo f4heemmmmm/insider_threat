@@ -470,7 +470,7 @@ export const formatDuration = (end: Date, start: Date): string => {
       }
       
       return {
-        id: alert.ID,
+        id: alert.id,
         timestamp: alertDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
         date: formatDate(alertDate),
         title: alert.alert_name,
@@ -480,7 +480,7 @@ export const formatDuration = (end: Date, start: Date): string => {
         MITRE_tactic: alert.MITRE_tactic,
         MITRE_technique: alert.MITRE_technique,
         onClick: () => {
-          const alertElement = document.getElementById(`alert-${alert.ID}`);
+          const alertElement = document.getElementById(`alert-${alert.id}`);
           if (alertElement) {
             alertElement.scrollIntoView({ behavior: 'smooth' });
             alertElement.classList.add('ring-2', 'ring-indigo-500');

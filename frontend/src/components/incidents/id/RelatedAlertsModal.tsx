@@ -58,9 +58,9 @@ export const RelatedAlertsModal: React.FC<RelatedAlertsModalProps> = ({ isOpen, 
                                 <div className = "grid gap-4">
                                     {alerts.map((alert) => (
                                         <RelatedAlertCard
-                                            key = {alert.ID}
+                                            key = {alert.id}
                                             alert = {alert}
-                                            onClick = {() => handleAlertClick(alert.ID)}
+                                            onClick = {() => handleAlertClick(alert.id)}
                                         />
                                     ))}
                                 </div>

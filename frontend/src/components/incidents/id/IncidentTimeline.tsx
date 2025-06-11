@@ -4,18 +4,13 @@ import { ChevronRight, AlertCircle, CheckCircle, PlayCircle, PauseCircle, User, 
 import { IncidentTimelineProps } from "../constants/interfaces";
 import { handleMITRETacticClick, handleMITRETechniqueClick, isTacticClickable, isTechniqueClickable, truncateCommentContent } from "../constants/functions";
 
-interface ExtendedIncidentTimelineProps extends IncidentTimelineProps {
-    onAlertSelect?: (eventId: string) => void;
-    onCommentEdit?: (commentId: string, newContent: string) => void;
-    onCommentDelete?: (commentId: string) => void;
-}
-
-export const IncidentTimeline: React.FC<ExtendedIncidentTimelineProps> = ({ 
+export const IncidentTimeline: React.FC<IncidentTimelineProps> = ({ 
     events, 
     className = "", 
     onAlertSelect, 
     onCommentEdit,
-    onCommentDelete 
+    onCommentDelete,
+    isIncidentClosed = false
 }) => {
     const [editingComment, setEditingComment] = useState<string | null>(null);
     const [editContent, setEditContent] = useState("");
@@ -28,6 +23,7 @@ export const IncidentTimeline: React.FC<ExtendedIncidentTimelineProps> = ({
     };
 
     const handleEditStart = (commentId: string, currentContent: string) => {
+        if (isIncidentClosed) return;
         setEditingComment(commentId);
         setEditContent(currentContent);
     };
@@ -39,7 +35,7 @@ export const IncidentTimeline: React.FC<ExtendedIncidentTimelineProps> = ({
     };
 
     const handleEditSave = async (commentId: string) => {
-        if (!editContent.trim() || isSubmitting || !onCommentEdit) return;
+        if (!editContent.trim() || isSubmitting || !onCommentEdit || isIncidentClosed) return;
         
         setIsSubmitting(true);
         try {
@@ -54,13 +50,22 @@ export const IncidentTimeline: React.FC<ExtendedIncidentTimelineProps> = ({
     };
 
     const handleDeleteClick = async (commentId: string) => {
-        if (!onCommentDelete) return;
+        if (!onCommentDelete || isIncidentClosed) return;
         
         if (window.confirm("Are you sure you want to delete this comment?")) {
             try {
                 await onCommentDelete(commentId);
             } catch (error) {
                 console.error("Failed to delete comment:", error);
+            }
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (editContent.trim() && !isSubmitting && !isIncidentClosed) {
+                handleEditSave(editingComment!);
             }
         }
     };
@@ -203,8 +208,8 @@ export const IncidentTimeline: React.FC<ExtendedIncidentTimelineProps> = ({
                                                 </button>
                                             )}
 
-                                            {/* Comment Actions */}
-                                            {event.eventType === "comment" && event.comment && (
+                                            {/* Comment Actions - Only show if incident is not closed */}
+                                            {event.eventType === "comment" && event.comment && !isIncidentClosed && (
                                                 <div className="flex items-center gap-1">
                                                     {event.comment.canEdit && (
                                                         <button
@@ -227,6 +232,15 @@ export const IncidentTimeline: React.FC<ExtendedIncidentTimelineProps> = ({
                                                     )}
                                                 </div>
                                             )}
+
+                                            {/* Show disabled state for comment actions when incident is closed */}
+                                            {event.eventType === "comment" && event.comment && isIncidentClosed && (
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-xs text-gray-400 italic px-2 py-1 bg-gray-50 rounded-md">
+                                                        Incident closed
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="px-4 py-2">
@@ -241,15 +255,17 @@ export const IncidentTimeline: React.FC<ExtendedIncidentTimelineProps> = ({
                                             {/* Comment content with editing capability */}
                                             {event.eventType === "comment" && event.comment && (
                                                 <div className="space-y-2">
-                                                    {editingComment === event.comment.id ? (
+                                                    {editingComment === event.comment.id && !isIncidentClosed ? (
                                                         <div className="space-y-2">
                                                             <textarea
                                                                 value={editContent}
                                                                 onChange={(e) => setEditContent(e.target.value)}
+                                                                onKeyDown={handleKeyDown}
                                                                 className="w-full p-2 border border-gray-300 rounded-md text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                                                 rows={3}
                                                                 maxLength={2000}
                                                                 disabled={isSubmitting}
+                                                                placeholder="Edit your comment (Press Enter to save, Shift+Enter for new line)"
                                                             />
                                                             <div className="flex items-center justify-between">
                                                                 <span className="text-xs text-gray-500">
@@ -283,6 +299,11 @@ export const IncidentTimeline: React.FC<ExtendedIncidentTimelineProps> = ({
                                                             {event.comment.updatedAt && new Date(event.comment.updatedAt).getTime() > new Date(event.comment.createdAt).getTime() && (
                                                                 <p className="text-xs text-gray-500 mt-2 italic">
                                                                     Edited {new Date(event.comment.updatedAt).toLocaleString()}
+                                                                </p>
+                                                            )}
+                                                            {isIncidentClosed && (
+                                                                <p className="text-xs text-gray-400 mt-2 italic">
+                                                                    Comments cannot be edited or deleted on closed incidents
                                                                 </p>
                                                             )}
                                                         </div>

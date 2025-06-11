@@ -165,11 +165,11 @@ export const Sidebar = () => {
         if (!user) return "U";
         
         try {
-            const firstInitial = user.firstName?.trim()?.charAt(0)?.toUpperCase() || "";
-            const lastInitial = user.lastName?.trim()?.charAt(0)?.toUpperCase() || "";
+            const firstInitial = user.first_name?.trim()?.charAt(0)?.toUpperCase() || "";
+            const lastInitial = user.last_name?.trim()?.charAt(0)?.toUpperCase() || "";
             const emailInitial = user.email?.trim()?.charAt(0)?.toUpperCase() || "";
             
-            // Prefer firstName + lastName, fallback to email, then "U"
+            // Prefer first_name + last_name, fallback to email, then "U"
             if (firstInitial && lastInitial) {
                 return firstInitial + lastInitial;
             } else if (firstInitial) {
@@ -272,8 +272,8 @@ export const Sidebar = () => {
                     {isExpanded && (
                         <div className="ml-3 min-w-0 flex-1">
                             <p className="text-sm font-medium truncate">
-                                {currentUser.firstName && currentUser.lastName 
-                                    ? `${currentUser.firstName} ${currentUser.lastName}`
+                                {currentUser.first_name && currentUser.last_name 
+                                    ? `${currentUser.first_name} ${currentUser.last_name}`
                                     : currentUser.email || "Unknown User"
                                 }
                             </p>

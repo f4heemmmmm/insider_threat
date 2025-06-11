@@ -75,17 +75,17 @@ export const RecentAlertsTable: React.FC<RecentAlertsTableProps> = ({ loading, r
                         <tbody className = "bg-white divide-y divide-gray-200">
                             {alerts.slice (0, 7).map((alert) => (
                                 <tr
-                                    key = {alert.ID}
+                                    key = {alert.id}
                                     className = "hover:bg-gray-50 cursor-pointer transition-colors duration-300"
-                                    onClick = {() => window.location.href = `/alerts/${alert.ID}`}
+                                    onClick = {() => window.location.href = `/alerts/${alert.id}`}
                                 >
                                     <td className = "px-6 py-4 whitespace-nowrap">
                                         <a
-                                            href = {`/alerts/${alert.ID}`}
+                                            href = {`/alerts/${alert.id}`}
                                             className = "text-sm font-light text-blue-600 hover:text-blue-800 hover:underline"
                                             onClick = {(e) => e.stopPropagation()}
                                         >
-                                            {formatID(alert.ID)}
+                                            {formatID(alert.id)}
                                         </a>
                                     </td>
                                     <td className = "px-6 py-4 whitespace-nowrap">
@@ -111,11 +111,11 @@ export const RecentAlertsTable: React.FC<RecentAlertsTableProps> = ({ loading, r
                                     </td>
                                     <td className = "px-6 py-4 whitespace-nowrap">
                                         <div className = {`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                            alert.isUnderIncident 
+                                            alert.is_under_incident 
                                                 ? "bg-green-100 text-green-800" 
                                                 : "bg-gray-100 text-gray-800"
                                         }`}>
-                                            {alert.isUnderIncident ? "Under Incident" : "Standalone"}
+                                            {alert.is_under_incident ? "Under Incident" : "Standalone"}
                                         </div>
                                     </td>
                                 </tr>

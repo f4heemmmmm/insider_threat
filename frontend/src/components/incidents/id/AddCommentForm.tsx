@@ -1,6 +1,6 @@
 // frontend/src/components/incidents/id/AddCommentForm.tsx
 import React, { useState } from "react";
-import { MessageSquarePlus, Send, X } from "lucide-react";
+import { MessageSquarePlus, Send, X, Lock } from "lucide-react";
 
 interface AddCommentFormProps {
     onSubmit: (content: string) => Promise<void>;
@@ -8,6 +8,7 @@ interface AddCommentFormProps {
     placeholder?: string;
     submitButtonText?: string;
     isSubmitting?: boolean;
+    isIncidentClosed?: boolean;
     className?: string;
 }
 
@@ -17,6 +18,7 @@ export const AddCommentForm: React.FC<AddCommentFormProps> = ({
     placeholder = "Add a comment...",
     submitButtonText = "Add Comment",
     isSubmitting = false,
+    isIncidentClosed = false,
     className = ""
 }) => {
     const [content, setContent] = useState("");
@@ -24,7 +26,7 @@ export const AddCommentForm: React.FC<AddCommentFormProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!content.trim() || isSubmitting) return;
+        if (!content.trim() || isSubmitting || isIncidentClosed) return;
 
         try {
             await onSubmit(content.trim());
@@ -44,8 +46,32 @@ export const AddCommentForm: React.FC<AddCommentFormProps> = ({
     };
 
     const handleFocus = () => {
+        if (isIncidentClosed) return;
         setIsExpanded(true);
     };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (content.trim() && !isSubmitting && !isIncidentClosed) {
+                handleSubmit(e as any);
+            }
+        }
+    };
+
+    // Show disabled state when incident is closed
+    if (isIncidentClosed) {
+        return (
+            <div className={`${className}`}>
+                <div className="w-full flex items-center gap-3 p-4 bg-gray-100 border border-gray-300 rounded-lg">
+                    <Lock className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-500 text-sm">
+                        Comments are disabled - incident is closed
+                    </span>
+                </div>
+            </div>
+        );
+    }
 
     if (!isExpanded) {
         return (
@@ -67,7 +93,8 @@ export const AddCommentForm: React.FC<AddCommentFormProps> = ({
                 <textarea
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    placeholder={placeholder}
+                    onKeyDown={handleKeyDown}
+                    placeholder={`${placeholder} (Press Enter to send, Shift+Enter for new line)`}
                     className="w-full p-4 border-0 rounded-t-lg resize-none focus:outline-none focus:ring-0 text-sm"
                     rows={3}
                     autoFocus

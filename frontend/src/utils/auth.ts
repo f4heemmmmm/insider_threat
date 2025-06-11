@@ -18,8 +18,8 @@ import { handleAuthError, safeErrorHandler, createSuccessResponse, createErrorRe
 export interface User {
     id: string;
     email: string;
-    firstName?: string;
-    lastName?: string;
+    first_name?: string;
+    last_name?: string;
 }
 
 export interface LoginResponse {
@@ -248,12 +248,12 @@ export const authenticatedRequest = async <T = any>(
 export const getUserDisplayName = (user?: User | null): string => {
     if (!user) return "User";
     
-    if (user.firstName && user.lastName) {
-        return `${user.firstName} ${user.lastName}`;
-    } else if (user.firstName) {
-        return user.firstName;
-    } else if (user.lastName) {
-        return user.lastName;
+    if (user.first_name && user.last_name) {
+        return `${user.first_name} ${user.last_name}`;
+    } else if (user.first_name) {
+        return user.first_name;
+    } else if (user.last_name) {
+        return user.last_name;
     } else {
         return user.email?.split("@")[0] || "User";
     }
@@ -268,12 +268,12 @@ export const getUserDisplayName = (user?: User | null): string => {
 export const getUserInitials = (user?: User | null): string => {
     if (!user) return "U";
     
-    if (user.firstName && user.lastName) {
-        return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
-    } else if (user.firstName) {
-        return user.firstName.charAt(0).toUpperCase();
-    } else if (user.lastName) {
-        return user.lastName.charAt(0).toUpperCase();
+    if (user.first_name && user.last_name) {
+        return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase();
+    } else if (user.first_name) {
+        return user.first_name.charAt(0).toUpperCase();
+    } else if (user.last_name) {
+        return user.last_name.charAt(0).toUpperCase();
     } else if (user.email) {
         return user.email.charAt(0).toUpperCase();
     }

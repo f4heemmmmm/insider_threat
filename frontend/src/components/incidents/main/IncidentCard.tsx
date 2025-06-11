@@ -25,7 +25,7 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({incident, alerts = []
                         Incident ID:
                     </p>
                     <p className = "text-blue-700 font-light">
-                        {incident.ID}
+                        {incident.id}
                     </p>
                 </div>
                 <div className = "flex items-center space-x-2">
@@ -55,7 +55,7 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({incident, alerts = []
                         ) : (
                             <>
                                 {alerts.slice(0, Math.min(2, alerts.length)).map((alert) => (
-                                    <div key = {alert.ID} className = "text-xs text-gray-700 border-l-2 border-blue-400 pl-2 py-1">
+                                    <div key = {alert.id} className = "text-xs text-gray-700 border-l-2 border-blue-400 pl-2 py-1">
                                         {alert.MITRE_tactic} via {alert.MITRE_technique}
                                     </div>
                                 ))}

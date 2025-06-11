@@ -20,10 +20,10 @@ export const AlertIncidentStatus: React.FC<AlertProps> = ({ alert }) => {
             setLoading(true);
 
             // Try retrieving incident using its incident ID
-            if (alert.incidentID) {
+            if (alert.incident_id) {
                 try {
                     const { IncidentService } = await import("@/services/incident.service");
-                    const relatedIncident = await IncidentService.getIncidentByID(alert.incidentID);
+                    const relatedIncident = await IncidentService.getIncidentByID(alert.incident_id);
                     console.log("Incident found!");
                     setIncident(relatedIncident);
                     return;
@@ -33,7 +33,7 @@ export const AlertIncidentStatus: React.FC<AlertProps> = ({ alert }) => {
             }
 
             // Fallback: Try the alert's relationship endpoint
-            const relatedIncident = await AlertService.getIncidentForAlert(alert.ID);
+            const relatedIncident = await AlertService.getIncidentForAlert(alert.id);
             setIncident(relatedIncident);
         } catch (error) {
             console.error("Error fetching for alert: ", error);
@@ -43,7 +43,7 @@ export const AlertIncidentStatus: React.FC<AlertProps> = ({ alert }) => {
     };
 
     useEffect(() => {
-        if (alert.isUnderIncident) {
+        if (alert.is_under_incident) {
             fetchRelatedIncident();
         }
     }, [alert]);
@@ -57,7 +57,7 @@ export const AlertIncidentStatus: React.FC<AlertProps> = ({ alert }) => {
             <div className = "bg-white p-4 rounded-md border border-gray-200 shadow-sm">
                 <div className = "flex items-center justify-between">
                     <span className = "font-medium text-gray-700"> Incident </span>
-                    {alert.isUnderIncident ? (
+                    {alert.is_under_incident ? (
                         <span className = "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                             Incident Related
                         </span>
@@ -67,7 +67,7 @@ export const AlertIncidentStatus: React.FC<AlertProps> = ({ alert }) => {
                         </span>
                     )}
                 </div>
-                {alert.isUnderIncident && (
+                {alert.is_under_incident && (
                     <div className = "space-y-3 text-sm">
                         {loading ? (
                             <div className = "text-gray-500 py-2"> Loading incident information...</div>
@@ -76,8 +76,8 @@ export const AlertIncidentStatus: React.FC<AlertProps> = ({ alert }) => {
                                 <div className = "flex items-center justify-between mt-4">
                                     <span className = "text-gray-600 w-1/2"> Incident ID </span>
                                     <span className = "text-xs font-light text-gray-500 flex items-center">
-                                        <a href = {`/incidents/${incident.ID}`} className = "ml-1 text-blue-500 hover:text-blue-700 hover:underline">
-                                            {incident.ID.substring(0, 30)}...
+                                        <a href = {`/incidents/${incident.id}`} className = "ml-1 text-blue-500 hover:text-blue-700 hover:underline">
+                                            {incident.id.substring(0, 30)}...
                                         </a>
                                     </span>
                                 </div>
@@ -103,8 +103,8 @@ export const AlertIncidentStatus: React.FC<AlertProps> = ({ alert }) => {
                         ) : (
                             <div className = "text-yellow-500 py-2">
                                 This incident is marked as incident-related, but incident details are unavailable at the moment.
-                                {alert.incidentID && (
-                                    <div className = "mt-1 text-gray-500"> Incident ID {alert.incidentID.substring(0, 50)}... </div>
+                                {alert.incident_id && (
+                                    <div className = "mt-1 text-gray-500"> Incident ID {alert.incident_id.substring(0, 50)}... </div>
                                 )}
                             </div>
                         )}

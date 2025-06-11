@@ -9,7 +9,7 @@ export const AlertEvidence: React.FC<AlertEvidenceProps> = ({ alert, expandedEvi
     const [expandedProperties, setExpandedProperties] = useState<Record<string, boolean>>({});
     
     const hasEvidence = alert.evidence && Object.keys(alert.evidence).length > 0;
-    const isExpanded = expandedEvidenceSection[`${alert.ID}-properties`];
+    const isExpanded = expandedEvidenceSection[`${alert.id}-properties`];
     
     // Check if evidence is an array converted to object with numeric keys
     const isEvidenceArray = hasEvidence && 
@@ -19,7 +19,7 @@ export const AlertEvidence: React.FC<AlertEvidenceProps> = ({ alert, expandedEvi
         !('count' in alert.evidence && Object.keys(alert.evidence).length === 1);
 
     const handleToggle = () => {
-        toggleEvidenceSection(alert.ID, "properties");
+        toggleEvidenceSection(alert.id, "properties");
     };
 
     const toggleProperty = (propertyKey: string) => {
@@ -173,16 +173,16 @@ export const AlertEvidence: React.FC<AlertEvidenceProps> = ({ alert, expandedEvi
                                 {/* Expandable raw JSON */}
                                 <div className="border-t pt-3">
                                     <button
-                                        onClick={() => toggleProperty(`${alert.ID}-evidence-${index}`)}
+                                        onClick={() => toggleProperty(`${alert.id}-evidence-${index}`)}
                                         className="text-xs text-gray-600 hover:text-gray-900 flex items-center space-x-1"
                                     >
                                         <span>View Raw JSON</span>
-                                        {expandedProperties[`${alert.ID}-evidence-${index}`] ? 
+                                        {expandedProperties[`${alert.id}-evidence-${index}`] ? 
                                             <ChevronUp className="h-3 w-3" /> : 
                                             <ChevronDown className="h-3 w-3" />
                                         }
                                     </button>
-                                    {expandedProperties[`${alert.ID}-evidence-${index}`] && (
+                                    {expandedProperties[`${alert.id}-evidence-${index}`] && (
                                         <pre className="mt-2 text-xs bg-gray-100 p-3 rounded overflow-auto max-h-40">
                                             {JSON.stringify(evidence, null, 2)}
                                         </pre>
@@ -312,7 +312,7 @@ export const AlertEvidence: React.FC<AlertEvidenceProps> = ({ alert, expandedEvi
 
     const renderPropertyValue = (key: string, value: any) => {
         const { isParsed, parsedValue, isArray } = parseEvidenceValue(value);
-        const propertyKey = `${alert.ID}-${key}`;
+        const propertyKey = `${alert.id}-${key}`;
         const isPropertyExpanded = expandedProperties[propertyKey];
 
         // Special handling for Microsoft Graph evidence arrays

@@ -223,7 +223,7 @@ export const mapAlertsToTimelineEvents = (alerts: Alert[]): TimelineEvent[] => {
     return alerts.map(alert => {
         const alertDate = new Date(alert.datestr);
         return {
-            id: alert.ID,
+            id: alert.id,
             timestamp: alertDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
             date: formatDate(alertDate),
             title: alert.Description || "Security Alert",

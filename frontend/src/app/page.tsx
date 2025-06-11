@@ -218,7 +218,7 @@ export default function Home(): JSX.Element {
 
     // Calculate additional metrics (filtered by date range if applicable)
     const filteredIncidents = isDateRangeFiltered ? filterIncidentsByDateRange(allIncidents, startDate, endDate) : allIncidents;
-    const filteredAlerts = allAlerts.filter(alert => alert.isUnderIncident);
+    const filteredAlerts = allAlerts.filter(alert => alert.is_under_incident);
     
     const alertsUnderIncident: number = filteredAlerts.length;
     const alertsPercentageUnderIncident: string = allAlerts.length > 0

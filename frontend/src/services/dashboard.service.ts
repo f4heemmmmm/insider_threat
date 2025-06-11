@@ -46,7 +46,7 @@ export const DashboardService = {
         ? recentIncidents.incidents.reduce((sum, incident) => sum + incident.score, 0) / recentIncidents.incidents.length
         : 0;
 
-        const alertsUnderIncidentCount = recentAlerts.alerts.filter(alert => alert.isUnderIncident).length;
+        const alertsUnderIncidentCount = recentAlerts.alerts.filter(alert => alert.is_under_incident).length;
         const criticalSeverityAlertsCount = recentAlerts.alerts.filter(alert => alert.score >= 9).length;
         const criticalIncidentsCount = recentIncidents.incidents.filter(incident => incident.score >= 9).length;
         const activeUsersCount = new Set(recentAlerts.alerts.map(alert => alert.user)).size;

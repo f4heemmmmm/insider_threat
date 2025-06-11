@@ -58,8 +58,8 @@ export const AlertCards: React.FC<AlertCardProps> = ({
                 const severity = getScoreSeverity(alert.score);
                 return (
                     <div
-                        id = {`alert-${alert.ID}`}
-                        key = {alert.ID}
+                        id = {`alert-${alert.id}`}
+                        key = {alert.id}
                         className = {`mb-6 bg-white rounded-lg shadow-sm overflow-hidden transition-all duration-200 border border-gray-200 hover:shadow-md cursor-pointer transform hover:translate-y-[-2px]`}
                         onClick = {() => handleAlertClick(alert)} // ✅ Updated to use navigation
                     >
@@ -69,7 +69,7 @@ export const AlertCards: React.FC<AlertCardProps> = ({
                                 <div className = "flex items-center gap-2">
                                     <StatusBadge status = {severity} />
                                     <h3 className = "text-base font-semibold text-gray-600"> Alert ID: </h3>
-                                    <h3 className = "text-base font-light text-gray-500"> {alert.ID} </h3>
+                                    <h3 className = "text-base font-light text-gray-500"> {alert.id} </h3>
                                 </div>
                                 <div className = "text-2xl font-light">
                                     {alert.score}

@@ -70,7 +70,7 @@ export default function IncidentsPage() {
             // Build filters object
             const filters: any = {};
             if (closureStatusFilter !== "all") {
-                filters.isClosed = closureStatusFilter === "closed";
+                filters.is_closed = closureStatusFilter === "closed";
             }
             
             // Priority order: Date range > Search > Default
@@ -87,7 +87,7 @@ export default function IncidentsPage() {
                 // Apply closure status filter on frontend for date range results
                 if (closureStatusFilter !== "all") {
                     const filteredIncidents = response.incidents.filter((incident: Incident) => {
-                        return closureStatusFilter === "closed" ? incident.isClosed : !incident.isClosed;
+                        return closureStatusFilter === "closed" ? incident.is_closed : !incident.is_closed;
                     });
                     response = {
                         incidents: filteredIncidents,
@@ -101,7 +101,7 @@ export default function IncidentsPage() {
                 // Apply closure status filter on frontend for search results
                 if (closureStatusFilter !== "all") {
                     const filteredIncidents = response.incidents.filter((incident: Incident) => {
-                        return closureStatusFilter === "closed" ? incident.isClosed : !incident.isClosed;
+                        return closureStatusFilter === "closed" ? incident.is_closed : !incident.is_closed;
                     });
                     response = {
                         incidents: filteredIncidents,
@@ -125,11 +125,11 @@ export default function IncidentsPage() {
 
             for (const incident of incidentsData) {
                 try {
-                    const alertsUnderIncident = await AlertService.getAlertsByIncidentID(incident.ID, "datestr", "desc");
-                    alertsMap.set(incident.ID, alertsUnderIncident);
+                    const alertsUnderIncident = await AlertService.getAlertsByIncidentID(incident.id, "datestr", "desc");
+                    alertsMap.set(incident.id, alertsUnderIncident);
                 } catch (error) {
-                    console.error(`Error fetching alerts for incident ${incident.ID}:`, error);
-                    alertsMap.set(incident.ID, []);
+                    console.error(`Error fetching alerts for incident ${incident.id}:`, error);
+                    alertsMap.set(incident.id, []);
                 }
             }
             setIncidentRelatedAlerts(alertsMap);
@@ -373,10 +373,10 @@ export default function IncidentsPage() {
                             // Render actual incidents 
                             incidents.map((incident) => (
                                 <IncidentCard
-                                    key={incident.ID}
+                                    key={incident.id}
                                     incident={incident}
-                                    alerts={incidentRelatedAlerts.get(incident.ID) || []}
-                                    onClick={() => navigateToIncidentDetails(incident.ID)}
+                                    alerts={incidentRelatedAlerts.get(incident.id) || []}
+                                    onClick={() => navigateToIncidentDetails(incident.id)}
                                 />
                             ))
                         )}

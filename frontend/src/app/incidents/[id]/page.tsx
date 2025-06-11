@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Alert } from "@/types/alert.types";
 import { Incident } from "@/types/incident.types";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, JSX } from "react";
 import { IncidentService } from "@/services/incident.service";
 import { calculateIncidentDuration, extractMITRETactics, getScoreSeverity } from "@/constants/functions";
 import { TimelineEvent, IncidentStatusChange, IncidentComment } from "@/components/incidents/constants/interfaces";
@@ -17,16 +17,17 @@ import { AddCommentForm } from "@/components/incidents/id/AddCommentForm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { AlertHeader } from "@/components/alerts/id/AlertHeader";
 import { AlertMITREFramework } from "@/components/alerts/id/AlertMITREFramework";
-import { AlertIncidentStatus } from "@/components/alerts/id/AlertIncidentStatus";
 import { AlertEvidence } from "@/components/alerts/id/AlertEvidence";
 import { AlertLogs } from "@/components/alerts/id/AlertLogs";
 import { AlertRawEvents } from "@/components/alerts/id/AlertRawEvents";
 
-export default function IncidentDetailsPage() {
+export default function IncidentDetailsPage(): JSX.Element {
     const params = useParams();
     const router = useRouter();
     const incidentID = params.id as string;
-    const [loading, setLoading] = useState(true);
+    
+    // State variables
+    const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [MITRETactics, setMITRETactics] = useState<string[]>([]);
     const [incident, setIncident] = useState<Incident | null>(null);
@@ -34,11 +35,11 @@ export default function IncidentDetailsPage() {
     const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
     const [statusChangeHistory, setStatusChangeHistory] = useState<IncidentStatusChange[]>([]);
     const [comments, setComments] = useState<IncidentComment[]>([]);
-    const [isRelatedAlertsModalOpen, setIsRelatedAlertsModalOpen] = useState(false);
-    const [isUpdatingIncident, setIsUpdatingIncident] = useState(false);
-    const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+    const [isRelatedAlertsModalOpen, setIsRelatedAlertsModalOpen] = useState<boolean>(false);
+    const [isUpdatingIncident, setIsUpdatingIncident] = useState<boolean>(false);
+    const [isSubmittingComment, setIsSubmittingComment] = useState<boolean>(false);
     const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
-    const [isSplitViewOpen, setIsSplitViewOpen] = useState(false);
+    const [isSplitViewOpen, setIsSplitViewOpen] = useState<boolean>(false);
     const [expandedEvidenceSection, setExpandedEvidenceSection] = useState<Record<string, boolean>>({});
 
     const [incidentDuration, setIncidentDuration] = useState<{
@@ -52,7 +53,7 @@ export default function IncidentDetailsPage() {
     });
 
     // Handle back navigation
-    const handleBackClick = () => {
+    const handleBackClick = (): void => {
         router.back();
     };
 
@@ -68,7 +69,7 @@ export default function IncidentDetailsPage() {
     }, [relatedAlerts, statusChangeHistory, comments]);
 
     // Fetch status history from backend with user information
-    const fetchStatusHistory = async (incidentId: string) => {
+    const fetchStatusHistory = async (incidentId: string): Promise<void> => {
         try {
             const statusHistory = await IncidentService.getIncidentStatusHistory(incidentId);
             setStatusChangeHistory(statusHistory);
@@ -79,7 +80,7 @@ export default function IncidentDetailsPage() {
     };
 
     // Fetch comments from backend
-    const fetchComments = async (incidentId: string) => {
+    const fetchComments = async (incidentId: string): Promise<void> => {
         try {
             const commentsData = await IncidentService.getIncidentComments(incidentId);
             setComments(commentsData);
@@ -91,7 +92,7 @@ export default function IncidentDetailsPage() {
 
     // Fetch incident details
     useEffect(() => {
-        const fetchIncidentDetails = async () => {
+        const fetchIncidentDetails = async (): Promise<void> => {
             try {
                 setLoading(true);
                 setError(null);
@@ -105,7 +106,7 @@ export default function IncidentDetailsPage() {
                 
                 setIncident(foundIncident);
 
-                const alerts = await IncidentService.getRelatedAlerts(foundIncident.ID);
+                const alerts = await IncidentService.getRelatedAlerts(foundIncident.id);
                 const sortedAlerts = [...alerts].sort((a, b) =>
                     new Date(a.datestr).getTime() - new Date(b.datestr).getTime()
                 );
@@ -123,8 +124,8 @@ export default function IncidentDetailsPage() {
 
                 // Fetch status change history and comments
                 await Promise.all([
-                    fetchStatusHistory(foundIncident.ID),
-                    fetchComments(foundIncident.ID)
+                    fetchStatusHistory(foundIncident.id),
+                    fetchComments(foundIncident.id)
                 ]);
                 
             } catch (err) {
@@ -140,24 +141,24 @@ export default function IncidentDetailsPage() {
         }
     }, [incidentID]);
 
-    const handleToggleIncidentStatus = async () => {
+    const handleToggleIncidentStatus = async (): Promise<void> => {
         if (!incident) return;
         
-        const newStatus = !incident.isClosed;
+        const newStatus = !incident.is_closed;
         
         try {
             setIsUpdatingIncident(true);
             
             // Update incident status on backend (user tracking handled automatically)
-            const updatedIncident = await IncidentService.updateIncident(incident.ID, {
-                isClosed: newStatus
+            const updatedIncident = await IncidentService.updateIncident(incident.id, {
+                is_closed: newStatus
             });
             
             // Update local incident state
             setIncident(updatedIncident);
             
             // Refetch status history from backend to get the new status change record with user info
-            await fetchStatusHistory(incident.ID);
+            await fetchStatusHistory(incident.id);
             
         } catch (err) {
             console.error("Error updating incident status:", err);
@@ -167,28 +168,28 @@ export default function IncidentDetailsPage() {
         }
     };
 
-    const handleShowRelatedAlertsModal = () => {
+    const handleShowRelatedAlertsModal = (): void => {
         setIsRelatedAlertsModalOpen(true);
     };
 
-    const handleCloseRelatedAlertsModal = () => {
+    const handleCloseRelatedAlertsModal = (): void => {
         setIsRelatedAlertsModalOpen(false);
     };
 
-    const handleAlertSelect = (alertId: string) => {
-        const alert = relatedAlerts.find(a => a.ID === alertId);
+    const handleAlertSelect = (alertId: string): void => {
+        const alert = relatedAlerts.find(a => a.id === alertId);
         if (alert) {
             setSelectedAlert(alert);
             setIsSplitViewOpen(true);
         }
     };
 
-    const handleCloseSplitView = () => {
+    const handleCloseSplitView = (): void => {
         setIsSplitViewOpen(false);
         setSelectedAlert(null);
     };
 
-    const toggleEvidenceSection = (alertID: string, sectionName: string) => {
+    const toggleEvidenceSection = (alertID: string, sectionName: string): void => {
         const key = `${alertID}-${sectionName}`;
         setExpandedEvidenceSection(prev => ({
             ...prev,
@@ -197,12 +198,12 @@ export default function IncidentDetailsPage() {
     };
 
     // Comment handling functions
-    const handleAddComment = async (content: string) => {
-        if (!incident) return;
+    const handleAddComment = async (content: string): Promise<void> => {
+        if (!incident || incident.is_closed) return;
         
         setIsSubmittingComment(true);
         try {
-            const newComment = await IncidentService.createComment(incident.ID, content);
+            const newComment = await IncidentService.createComment(incident.id, content);
             setComments(prev => [...prev, newComment]);
         } catch (err) {
             console.error("Error adding comment:", err);
@@ -212,7 +213,9 @@ export default function IncidentDetailsPage() {
         }
     };
 
-    const handleEditComment = async (commentId: string, newContent: string) => {
+    const handleEditComment = async (commentId: string, newContent: string): Promise<void> => {
+        if (!incident || incident.is_closed) return;
+        
         try {
             const updatedComment = await IncidentService.updateComment(commentId, newContent);
             setComments(prev => prev.map(comment => 
@@ -224,7 +227,9 @@ export default function IncidentDetailsPage() {
         }
     };
 
-    const handleDeleteComment = async (commentId: string) => {
+    const handleDeleteComment = async (commentId: string): Promise<void> => {
+        if (!incident || incident.is_closed) return;
+        
         try {
             await IncidentService.deleteComment(commentId);
             setComments(prev => prev.filter(comment => comment.id !== commentId));
@@ -236,23 +241,23 @@ export default function IncidentDetailsPage() {
 
     if (loading) {
         return (
-            <div className = "flex justify-center items-center h-64 w-full">
-                <div className = "animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500" />
+            <div className="flex justify-center items-center h-64 w-full">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500" />
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className = "bg-red-50 p-4 my-4">
-                <div className = "flex">
-                    <div className = "flex-shrink-0">
-                        <svg className = "h-5 w-5 text-red-400" viewBox = "0 0 20 20" fill = "currentColor">
-                            <path fillRule = "evenodd" d = "M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule = "evenodd" />
+            <div className="bg-red-50 p-4 my-4">
+                <div className="flex">
+                    <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                         </svg>
                     </div>
-                    <div className = "ml-3">
-                        <p className = "text-sm text-red-700"> {error} </p>
+                    <div className="ml-3">
+                        <p className="text-sm text-red-700">{error}</p>
                     </div>
                 </div>
             </div>
@@ -261,17 +266,17 @@ export default function IncidentDetailsPage() {
 
     if (!incident) {
         return (
-            <div className = "text-center py-16 text-gray-500 bg-gray-50 rounded-md max-w-8xl">
-                <h3 className = "mt-2 text-lg font-medium text-gray-900"> Incident not found </h3>
-                <p className = "mt-1 text-sm text-gray-500"> The incident you're looking for does not exist or has been removed. </p>
-                <div className = "mt-6" />
+            <div className="text-center py-16 text-gray-500 bg-gray-50 rounded-md max-w-8xl">
+                <h3 className="mt-2 text-lg font-medium text-gray-900">Incident not found</h3>
+                <p className="mt-1 text-sm text-gray-500">The incident you're looking for does not exist or has been removed.</p>
+                <div className="mt-6" />
             </div>
         );
     }
 
     return (
-        <div className = "p-8">
-            <div className = "flex items-center gap-4 mb-6">
+        <div className="p-8">
+            <div className="flex items-center gap-4 mb-6">
                 <button
                     onClick={handleBackClick}
                     className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
@@ -280,12 +285,12 @@ export default function IncidentDetailsPage() {
                     <ArrowLeft className="h-5 w-5" />
                 </button>
                 <div className="flex justify-between items-center flex-1">
-                    <h1 className = "text-2xl font-semibold text-gray-900"> Incident Details </h1>
+                    <h1 className="text-2xl font-semibold text-gray-900">Incident Details</h1>
                     <button
                         onClick={handleToggleIncidentStatus}
                         disabled={isUpdatingIncident}
                         className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                            incident?.isClosed
+                            incident?.is_closed
                                 ? "bg-green-100 text-green-800 border border-green-200 hover:bg-green-200 hover:border-green-300"
                                 : "bg-red-100 text-red-800 border border-red-200 hover:bg-red-200 hover:border-red-300"
                         } ${
@@ -296,7 +301,7 @@ export default function IncidentDetailsPage() {
                     >
                         {isUpdatingIncident 
                             ? "Updating..." 
-                            : incident?.isClosed 
+                            : incident?.is_closed 
                                 ? "Reopen Incident" 
                                 : "Close Incident"
                         }
@@ -304,16 +309,16 @@ export default function IncidentDetailsPage() {
                 </div>
             </div>
             <IncidentSummaryCard
-                incident = {incident}
-                incidentDuration = {incidentDuration}
-                MITRETactics = {MITRETactics}
-                totalAlerts = {relatedAlerts.length}
-                onShowAlerts = {handleShowRelatedAlertsModal}
-                getScoreSeverity = {getScoreSeverity}
+                incident={incident}
+                incidentDuration={incidentDuration}
+                MITRETactics={MITRETactics}
+                totalAlerts={relatedAlerts.length}
+                onShowAlerts={handleShowRelatedAlertsModal}
+                getScoreSeverity={getScoreSeverity}
             />
-            <div className = "w-full h-[calc(100vh-200px)] bg-white shadow rounded-lg overflow-hidden">
-                <div className = "px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                    <h2 className = "text-lg font-semibold text-gray-900"> Incident Timeline </h2>
+            <div className="w-full h-[calc(100vh-200px)] bg-white shadow rounded-lg overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h2 className="text-lg font-semibold text-gray-900">Incident Timeline</h2>
                     {isSplitViewOpen && (
                         <button
                             onClick={handleCloseSplitView}
@@ -323,15 +328,16 @@ export default function IncidentDetailsPage() {
                         </button>
                     )}
                 </div>
-                <div className = "flex h-[calc(100%-60px)]">
+                <div className="flex h-[calc(100%-60px)]">
                     {/* Timeline Section */}
-                    <div className = {`transition-all duration-300 ease-in-out ${isSplitViewOpen ? 'w-1/2' : 'w-full'}`}>
+                    <div className={`transition-all duration-300 ease-in-out ${isSplitViewOpen ? 'w-1/2' : 'w-full'}`}>
                         <div className="h-full flex flex-col">
                             {/* Add Comment Form */}
                             <div className="border-b border-gray-200 p-4 bg-gray-50">
                                 <AddCommentForm
                                     onSubmit={handleAddComment}
                                     isSubmitting={isSubmittingComment}
+                                    isIncidentClosed={incident?.is_closed}
                                     placeholder="Add a comment to this incident..."
                                 />
                             </div>
@@ -339,62 +345,61 @@ export default function IncidentDetailsPage() {
                             {/* Timeline */}
                             <div className="flex-1 overflow-hidden p-6">
                                 <IncidentTimeline
-                                    events = {timelineEvents}
-                                    className = "h-full"
-                                    onAlertSelect = {handleAlertSelect}
-                                    onCommentEdit = {handleEditComment}
-                                    onCommentDelete = {handleDeleteComment}
+                                    events={timelineEvents}
+                                    className="h-full"
+                                    onAlertSelect={handleAlertSelect}
+                                    onCommentEdit={handleEditComment}
+                                    onCommentDelete={handleDeleteComment}
+                                    isIncidentClosed={incident?.is_closed}
                                 />
                             </div>
                         </div>
                     </div>
                     
                     {/* Alert Details Split Section */}
-                    <div className = {`transition-all duration-300 ease-in-out overflow-hidden ${
+                    <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
                         isSplitViewOpen ? 'w-1/2 border-l border-gray-200' : 'w-0'
                     }`}>
                         {isSplitViewOpen && selectedAlert && (
-                            <div className = "h-full overflow-y-auto bg-gray-50">
-                                <div className = "p-4 bg-white border-b border-gray-200 sticky top-0 z-10">
-                                    <div className = "flex items-center justify-between">
-                                        <div className = "flex items-center space-x-3">
+                            <div className="h-full overflow-y-auto bg-gray-50">
+                                <div className="p-4 bg-white border-b border-gray-200 sticky top-0 z-10">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-3">
                                             <StatusBadge status={getScoreSeverity(selectedAlert.score)} />
-                                            <span className = "text-lg font-medium text-gray-700">Alert ID: </span>
-                                            <span className = "text-lg font-light text-blue-600"> {selectedAlert.ID} </span>
+                                            <span className="text-lg font-medium text-gray-700">Alert ID:</span>
+                                            <span className="text-lg font-light text-blue-600">{selectedAlert.id}</span>
                                         </div>
                                         <button
                                             onClick={handleCloseSplitView}
-                                            className = "text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                                            className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
                                         >
-                                            <svg className = "w-5 h-5" fill = "none" stroke = "currentColor" viewBox = "0 0 24 24">
-                                                <path strokeLinecap = "round" strokeLinejoin = "round" strokeWidth = {2} d = "M6 18L18 6M6 6l12 12" />
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                             </svg>
                                         </button>
                                     </div>
                                 </div>
                                 
-                                <div className = "p-4 space-y-4">
+                                <div className="p-4 space-y-4">
                                     {/* Alert Header */}
-                                    <div className = "bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                                        <div className = "p-4">
+                                    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                                        <div className="p-4">
                                             <AlertHeader alert={selectedAlert} />
                                         </div>
                                     </div>
                                     
-                                   
-                                    
                                     {/* Alert Logs */}
                                     {selectedAlert.Logs && (
-                                        <div className = "bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                                            <div className = "p-4">
+                                        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                                            <div className="p-4">
                                                 <AlertLogs logs={selectedAlert.Logs} />
                                             </div>
                                         </div>
                                     )}
                                     
                                     {/* Alert Evidence */}
-                                    <div className = "bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                                        <div className = "p-4">
+                                    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                                        <div className="p-4">
                                             <AlertEvidence 
                                                 alert={selectedAlert} 
                                                 expandedEvidenceSection={expandedEvidenceSection} 
@@ -405,11 +410,11 @@ export default function IncidentDetailsPage() {
                                     
                                     {/* Raw Events */}
                                     {selectedAlert.evidence && selectedAlert.evidence.list_raw_events.length > 0 && (
-                                        <div className = "bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                                            <div className = "p-4">
+                                        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                                            <div className="p-4">
                                                 <AlertRawEvents 
                                                     evidence={selectedAlert.evidence} 
-                                                    alertID={selectedAlert.ID} 
+                                                    alertID={selectedAlert.id} 
                                                     expandedEvidenceSection={expandedEvidenceSection} 
                                                     toggleEvidenceSection={toggleEvidenceSection} 
                                                 />
@@ -423,11 +428,11 @@ export default function IncidentDetailsPage() {
                 </div>
             </div>
             <RelatedAlertsModal
-                isOpen = {isRelatedAlertsModalOpen}
-                onClose = {handleCloseRelatedAlertsModal}
-                alerts = {relatedAlerts}
-                incidentID = {incidentID}
+                isOpen={isRelatedAlertsModalOpen}
+                onClose={handleCloseRelatedAlertsModal}
+                alerts={relatedAlerts}
+                incidentID={incidentID}
             />
         </div>
     );
-};
+}

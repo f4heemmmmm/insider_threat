@@ -17,7 +17,7 @@ export const RelatedAlertCard: React.FC<RelatedAlertCardProps> = ({ alert, onCli
 
     return (
         <div
-            id = {`alert-${alert.ID}`}
+            id = {`alert-${alert.id}`}
             className = {`mb-6 bg-white rounded-lg shadow-sm overflow-hidden transition-all duration-200 border border-gray-200 hover:shadow-md cursor-pointer transform hover:translate-y-[-2px] ${className}`}
             onClick = {handleClick}
         >
@@ -27,7 +27,7 @@ export const RelatedAlertCard: React.FC<RelatedAlertCardProps> = ({ alert, onCli
                     <div className = "flex items-center gap-2">
                         <StatusBadge status = {severity} />
                         <h3 className = "text-base font-semibold text-gray-600"> Alert ID: </h3>
-                        <h3 className = "text-base font-light text-gray-500"> {alert.ID} </h3>
+                        <h3 className = "text-base font-light text-gray-500"> {alert.id} </h3>
                     </div>
                     <div>
                         <span className = "font-light text-xl"> {alert.score} </span>

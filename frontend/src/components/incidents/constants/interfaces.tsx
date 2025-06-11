@@ -13,7 +13,7 @@ export interface IncidentSummaryCardProps {
     totalAlerts: number;
     onShowAlerts: () => void;
     getScoreSeverity: (score: number) => "low" | "medium" | "high" | "critical";
-};
+}
 
 // IncidentTimeline.tsx - Enhanced to support different event types including comments
 export interface TimelineEvent {
@@ -44,7 +44,7 @@ export interface TimelineEvent {
         updatedAt: Date;
     }; // New field for comment details
     onClick?: () => void;
-};
+}
 
 // Enhanced interface for incident status change events with user tracking
 export interface IncidentStatusChange {
@@ -55,7 +55,7 @@ export interface IncidentStatusChange {
     newStatus: boolean;
     userId?: string;
     userDisplayName?: string;
-};
+}
 
 // New interface for incident comments
 export interface IncidentComment {
@@ -69,7 +69,7 @@ export interface IncidentComment {
     user_display_name?: string;
     can_edit?: boolean;
     can_delete?: boolean;
-};
+}
 
 export interface IncidentTimelineProps {
     events: TimelineEvent[];
@@ -78,14 +78,15 @@ export interface IncidentTimelineProps {
     onAlertSelect?: (eventId: string) => void;
     onCommentEdit?: (commentId: string, newContent: string) => void;
     onCommentDelete?: (commentId: string) => void;
-};
+    isIncidentClosed?: boolean; // Added this property
+}
 
 // RelatedAlertCard.tsx
 export interface RelatedAlertCardProps {
     alert: Alert;
     onClick?: (alert: Alert) => void;
     className?: string;
-};
+}
 
 // RelatedAlertsModal.tsx
 export interface RelatedAlertsModalProps {
@@ -93,4 +94,4 @@ export interface RelatedAlertsModalProps {
     onClose: () => void;
     alerts: Alert[];
     incidentID: string;
-};
+}
