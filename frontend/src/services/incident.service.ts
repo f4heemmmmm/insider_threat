@@ -2,6 +2,7 @@
 import { api } from "./api";
 import { Alert } from "@/types/alert.types";
 import { Incident, IncidentsResponse } from "@/types/incident.types";
+import { IncidentStatusChange, IncidentComment } from "@/components/incidents/constants/interfaces";
 
 export type SortField = "windows_start" | "score" | "user";
 export type SortOrder = "asc" | "desc";
@@ -245,6 +246,139 @@ export const IncidentService = {
         const response = await api.get(`/incident/${incidentID}/alerts`);
         return response.data;
     },
+
+    /**
+     * Retrieves user information by user ID for status history display
+     * @param userId - The unique identifier of the user
+     * @returns Promise containing user display information
+     */
+    getUserById: async (userId: string): Promise<{ firstName: string; lastName: string; email: string } | null> => {
+        try {
+            const response = await api.get(`/auth/users`);
+            const users = response.data;
+            const user = users.find((u: any) => u.id === userId);
+            return user || null;
+        } catch (error) {
+            console.error('Failed to fetch user information:', error);
+            return null;
+        }
+    },
+
+    /**
+     * Enhanced method to retrieve status change history with user information
+     */
+    getIncidentStatusHistory: async (incidentID: string): Promise<IncidentStatusChange[]> => {
+        try {
+            const response = await api.get(`/incident/${incidentID}/status-history`);
+            const statusHistory = response.data;
+            
+            // Enrich status history with user information
+            const enrichedHistory = await Promise.all(
+                statusHistory.map(async (item: any) => {
+                    let userDisplayName = 'System';
+                    
+                    if (item.user_id) {
+                        try {
+                            const user = await IncidentService.getUserById(item.user_id);
+                            if (user) {
+                                userDisplayName = `${user.firstName} ${user.lastName}`.trim() || user.email;
+                            }
+                        } catch (error) {
+                            console.warn(`Failed to fetch user details for ${item.user_id}:`, error);
+                            userDisplayName = 'Unknown User';
+                        }
+                    }
+                    
+                    return {
+                        id: item.id,
+                        timestamp: new Date(item.created_at),
+                        action: item.action,
+                        previousStatus: item.previous_status,
+                        newStatus: item.new_status,
+                        userId: item.user_id,
+                        userDisplayName // Add user display name for UI
+                    };
+                })
+            );
+            
+            return enrichedHistory;
+        } catch (error) {
+            console.error('Failed to fetch incident status history:', error);
+            throw new Error(`Failed to fetch status history for incident ${incidentID}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    },
+
+    // =================== COMMENT METHODS ===================
+
+    /**
+     * Creates a new comment on an incident
+     */
+    createComment: async (incidentID: string, content: string): Promise<IncidentComment> => {
+        try {
+            const response = await api.post(`/incident/${incidentID}/comments`, {
+                incident_id: incidentID,
+                content: content
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error creating comment:', error);
+            throw new Error(`Failed to create comment: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    },
+
+    /**
+     * Retrieves all comments for a specific incident
+     */
+    getIncidentComments: async (incidentID: string): Promise<IncidentComment[]> => {
+        try {
+            const response = await api.get(`/incident/${incidentID}/comments`);
+            return response.data;
+        } catch (error) {
+            console.error('Failed to fetch incident comments:', error);
+            throw new Error(`Failed to fetch comments for incident ${incidentID}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    },
+
+    /**
+     * Updates an existing comment
+     */
+    updateComment: async (commentId: string, content: string): Promise<IncidentComment> => {
+        try {
+            const response = await api.put(`/incident/comments/${commentId}`, {
+                content: content
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error updating comment:', error);
+            throw new Error(`Failed to update comment: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    },
+
+    /**
+     * Deletes a comment
+     */
+    deleteComment: async (commentId: string): Promise<boolean> => {
+        try {
+            await api.delete(`/incident/comments/${commentId}`);
+            return true;
+        } catch (error) {
+            console.error('Error deleting comment:', error);
+            throw new Error(`Failed to delete comment: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    },
+
+    /**
+     * Gets a specific comment by ID
+     */
+    getCommentById: async (commentId: string): Promise<IncidentComment> => {
+        try {
+            const response = await api.get(`/incident/comments/${commentId}`);
+            return response.data;
+        } catch (error) {
+            console.error('Failed to fetch comment:', error);
+            throw new Error(`Failed to fetch comment ${commentId}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    },
     
     /**
      * Retrieves all incidents in the system without pagination or filtering
@@ -286,5 +420,21 @@ export const IncidentService = {
             params
         });
         return response.data;
+    },
+
+    /**
+     * Updates an incident by its ID with partial data
+     * @param ID - The unique identifier of the incident
+     * @param updateData - Partial incident data to update
+     * @returns Promise containing the updated incident data
+     */
+    updateIncident: async (ID: string, updateData: Partial<Incident>): Promise<Incident> => {
+        try {
+            const response = await api.put(`/incident/${ID}`, updateData);
+            return response.data;
+        } catch (error) {
+            console.error('Error updating incident:', error);
+            throw error;
+        }
     },
 };

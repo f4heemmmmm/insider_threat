@@ -3,7 +3,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 // Components Import
@@ -26,6 +26,8 @@ interface DateRange {
     endDate: Date | null;
 }
 
+type ClosureStatusFilter = "all" | "open" | "closed";
+
 export default function IncidentsPage() {
     const router = useRouter();
     const [limit] = useState(10);
@@ -39,6 +41,8 @@ export default function IncidentsPage() {
     const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
     const [sortField, setSortField] = useState<SortField>("windows_start");
     const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+    const [closureStatusFilter, setClosureStatusFilter] = useState<ClosureStatusFilter>("all");
+    const [isClosureDropdownOpen, setIsClosureDropdownOpen] = useState(false);
     
     // Date range state
     const [dateRange, setDateRange] = useState<DateRange>({
@@ -53,12 +57,21 @@ export default function IncidentsPage() {
     // Check if date range filter is active
     const isDateRangeActive = Boolean(dateRange.startDate && dateRange.endDate);
 
+    // Check if closure status filter is active
+    const isClosureFilterActive = closureStatusFilter !== "all";
+
     // API Call
     const fetchIncidents = async (searchTerm = "") => {
         try {
             setLoading(true);
             const offset = (page - 1) * limit;
             let response;
+            
+            // Build filters object
+            const filters: any = {};
+            if (closureStatusFilter !== "all") {
+                filters.isClosed = closureStatusFilter === "closed";
+            }
             
             // Priority order: Date range > Search > Default
             if (isDateRangeActive) {
@@ -70,12 +83,34 @@ export default function IncidentsPage() {
                     sortField,
                     sortOrder
                 );
+                
+                // Apply closure status filter on frontend for date range results
+                if (closureStatusFilter !== "all") {
+                    const filteredIncidents = response.incidents.filter((incident: Incident) => {
+                        return closureStatusFilter === "closed" ? incident.isClosed : !incident.isClosed;
+                    });
+                    response = {
+                        incidents: filteredIncidents,
+                        total: filteredIncidents.length
+                    };
+                }
             } else if (searchTerm) {
                 // Search filtering
                 response = await IncidentService.searchIncidents(searchTerm, limit, offset, sortField, sortOrder);
+                
+                // Apply closure status filter on frontend for search results
+                if (closureStatusFilter !== "all") {
+                    const filteredIncidents = response.incidents.filter((incident: Incident) => {
+                        return closureStatusFilter === "closed" ? incident.isClosed : !incident.isClosed;
+                    });
+                    response = {
+                        incidents: filteredIncidents,
+                        total: filteredIncidents.length
+                    };
+                }
             } else {
-                // Default - get all incidents
-                response = await IncidentService.getIncidents(limit, offset, sortField, sortOrder);
+                // Default - get all incidents with closure filter
+                response = await IncidentService.getIncidents(limit, offset, sortField, sortOrder, filters);
             }
             
             // Handle response
@@ -110,7 +145,7 @@ export default function IncidentsPage() {
 
     useEffect(() => {
         fetchIncidents(searchQuery);
-    }, [page, limit, sortField, sortOrder, dateRange]);
+    }, [page, limit, sortField, sortOrder, dateRange, closureStatusFilter]);
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         const query = e.target.value;
@@ -168,16 +203,79 @@ export default function IncidentsPage() {
         setPage(1);
     };
 
+    // Closure status filter handlers
+    const handleClosureStatusChange = (status: ClosureStatusFilter) => {
+        setClosureStatusFilter(status);
+        setPage(1);
+        setIsClosureDropdownOpen(false);
+    };
+
+    const getClosureStatusLabel = (status: ClosureStatusFilter) => {
+        switch (status) {
+            case "all":
+                return "All Incidents";
+            case "open":
+                return "Open Incidents";
+            case "closed":
+                return "Closed Incidents";
+            default:
+                return "All Incidents";
+        }
+    };
+
+
+
     return (
         <div className="h-full p-10">
             <div className="bg-white shadow rounded-lg h-full flex flex-col">
                 <div className="px-6 py-4 border-b border-gray-200">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-lg font-semibold text-gray-900">
-                            <span className="text-4xl font-light">{total}</span> Incidents
+                            <span className="text-4xl font-light">{total}</span>
+                            {closureStatusFilter === "closed" 
+                                ? " Closed" 
+                                : closureStatusFilter === "open" 
+                                    ? " Open" 
+                                    : ""
+                            } Incidents
                         </h2>
                         
                         <div className="flex items-center space-x-4">
+                            {/* CLOSURE STATUS FILTER */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsClosureDropdownOpen(!isClosureDropdownOpen)}
+                                    className={`w-48 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-between ${
+                                        isClosureFilterActive ? "ring-2 ring-indigo-200 border-indigo-300" : ""
+                                    }`}
+                                >
+                                    <span className={isClosureFilterActive ? "text-indigo-700 font-medium" : "text-gray-700"}>
+                                        {getClosureStatusLabel(closureStatusFilter)}
+                                    </span>
+                                    <ChevronDown className="h-4 w-4 text-gray-500" />
+                                </button>
+                                
+                                {isClosureDropdownOpen && (
+                                    <div className="absolute z-10 mt-1 w-48 bg-white border border-gray-300 rounded-md shadow-lg">
+                                        <div className="py-1">
+                                            {(["all", "open", "closed"] as ClosureStatusFilter[]).map((status) => (
+                                                <button
+                                                    key={status}
+                                                    onClick={() => handleClosureStatusChange(status)}
+                                                    className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${
+                                                        closureStatusFilter === status
+                                                            ? "bg-indigo-50 text-indigo-700 font-medium"
+                                                            : "text-gray-700"
+                                                    }`}
+                                                >
+                                                    {getClosureStatusLabel(status)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
                             {/* DATE RANGE PICKER */}
                             <DateRangePicker
                                 value={dateRange}
@@ -241,10 +339,16 @@ export default function IncidentsPage() {
                             {getSortIcon("user")}
                         </button>
 
-                        {/* Active filter indicator */}
+                        {/* Active filter indicators */}
                         {isDateRangeActive && (
                             <div className="px-3 py-1 text-sm bg-blue-50 text-blue-700 rounded-md flex items-center">
                                 <span>Date Range Active</span>
+                            </div>
+                        )}
+                        
+                        {isClosureFilterActive && (
+                            <div className="px-3 py-1 text-sm bg-indigo-50 text-indigo-700 rounded-md flex items-center">
+                                <span>{closureStatusFilter === "open" ? "Open Only" : "Closed Only"}</span>
                             </div>
                         )}
                     </div>
@@ -258,7 +362,12 @@ export default function IncidentsPage() {
                             ))
                         ) : incidents.length === 0 ? (
                             <div className="text-center py-16 border border-dashed border-gray-200 rounded-lg">
-                                <p className="text-gray-500 text-lg">No incidents found.</p>
+                                <p className="text-gray-500 text-lg">
+                                    {isClosureFilterActive || isDateRangeActive || searchQuery
+                                        ? "No incidents found matching your filters."
+                                        : "No incidents found."
+                                    }
+                                </p>
                             </div>
                         ) : (
                             // Render actual incidents 
@@ -274,7 +383,7 @@ export default function IncidentsPage() {
                     </div>
 
                     {/* PAGINATION - Only show for non-date-range results */}
-                    {totalPages > 0 && !isDateRangeActive && (
+                    {totalPages > 0 && !isDateRangeActive && !searchQuery && (
                         <Pagination
                             currentPage={page}
                             totalPages={totalPages}
@@ -289,6 +398,15 @@ export default function IncidentsPage() {
                     {isDateRangeActive && total > 0 && (
                         <div className="mt-6 text-center text-sm text-gray-500">
                             Showing {total} incident{total !== 1 ? 's' : ''} in selected date range
+                            {isClosureFilterActive && ` (${closureStatusFilter} only)`}
+                        </div>
+                    )}
+                    
+                    {/* Search results summary */}
+                    {searchQuery && total > 0 && (
+                        <div className="mt-6 text-center text-sm text-gray-500">
+                            Found {total} incident{total !== 1 ? 's' : ''} matching "{searchQuery}"
+                            {isClosureFilterActive && ` (${closureStatusFilter} only)`}
                         </div>
                     )}
                 </div>

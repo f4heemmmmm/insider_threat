@@ -1,16 +1,22 @@
+// frontend/src/app/login/page.tsx
+
 "use client";
 
 import { login } from "@/utils/auth";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { useNotification } from "@/hooks/useNotification";
+import { handleAuthError, safeErrorHandler } from "@/utils/errorHandling";
 
 /**
  * LoginPage component that provides secure authentication interface for ENSIGN InfoSecurity users.
- * Now featuring a redesigned InsiderGuard logo with modern typography design and scrambling animation.
+ * Now featuring enhanced error handling, user-friendly notifications, and improved UX.
  */
 export default function LoginPage() {
     const router = useRouter();
+    const { showError, showSuccess, showWarning } = useNotification();
+    
     const [formData, setFormData] = useState({
         email: "",
         password: ""
@@ -65,6 +71,7 @@ export default function LoginPage() {
             [name]: value
         }));
 
+        // Clear any existing errors when user starts typing
         if (error) setError("");
 
         if (name === "email" && value) {
@@ -77,12 +84,17 @@ export default function LoginPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
+        // Validate form data
         if (!formData.email || !formData.password) {
-            setError("Please fill in all fields");
+            const errorMsg = "Please fill in all required fields";
+            setError(errorMsg);
+            showError(errorMsg, "Validation Error");
             return;
         }
 
+        // Validate email format
         if (!validateEmail(formData.email)) {
+            showError("Please enter a valid ENSIGN InfoSecurity email address", "Invalid Email");
             return;
         }
 
@@ -97,26 +109,66 @@ export default function LoginPage() {
 
             if (response.success) {
                 console.log("Login successful, redirecting to dashboard...");
-                router.push("/");
+                showSuccess("Login successful! Redirecting to dashboard...", "Welcome");
+                
+                // Small delay to show success message before redirect
+                setTimeout(() => {
+                    router.push("/");
+                }, 1000);
             } else {
-                setError(response.message || "Login failed");
+                // Handle structured error response
+                const errorResponse = handleAuthError(response);
+                setError(errorResponse.message);
+                showError(errorResponse.message, "Login Failed");
             }
         } catch (error: any) {
             console.error("Login error:", error);
             
-            if (error.message.includes("fetch")) {
-                setError("Cannot connect to server. Please check if the backend is running on port 3000.");
-            } else if (error.message.includes("Invalid email or password")) {
-                setError("Invalid email or password");
+            // Use enhanced error handling
+            const errorResponse = handleAuthError(error);
+            setError(errorResponse.message);
+            
+            // Show appropriate notification based on error type
+            if (errorResponse.code === "NETWORK_ERROR" || errorResponse.code === "CONNECTION_ERROR") {
+                showError(
+                    "Cannot connect to server. Please check if the backend is running on port 3000.",
+                    "Connection Error",
+                    { duration: 8000 }
+                );
+            } else if (errorResponse.code === "INVALID_CREDENTIALS") {
+                showError(
+                    "Invalid email or password. Please check your credentials and try again.",
+                    "Authentication Failed"
+                );
+            } else if (errorResponse.code === "USER_NOT_FOUND") {
+                showError(
+                    "No account found with this email address. Please verify your email or contact support.",
+                    "Account Not Found"
+                );
+            } else if (errorResponse.code === "SERVER_ERROR") {
+                showError(
+                    "Server is currently unavailable. Please try again in a few moments.",
+                    "Server Error",
+                    { duration: 8000 }
+                );
+            } else if (errorResponse.code === "TIMEOUT_ERROR") {
+                showWarning(
+                    "Request timed out. Please check your connection and try again.",
+                    "Timeout Error"
+                );
             } else {
-                setError(error.message || "Login failed. Please try again.");
+                // Generic error
+                showError(
+                    errorResponse.message || "An unexpected error occurred. Please try again.",
+                    "Login Error"
+                );
             }
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Scrambling animation logic
+    // Scrambling animation logic (unchanged)
     useEffect(() => {
         const targetInsider = "Insider";
         const targetGuard = "Guard";
@@ -125,18 +177,16 @@ export default function LoginPage() {
         let insiderIndex = 0;
         let guardIndex = 0;
         let scrambleCount = 0;
-        const maxScrambles = 6; // Number of scramble iterations per letter
-        const scrambleSpeed = 20; // Milliseconds between scrambles
-        const revealDelay = 200; // Delay before starting to reveal each letter
+        const maxScrambles = 6;
+        const scrambleSpeed = 20;
+        const revealDelay = 200;
 
         const scrambleText = () => {
             const randomChar = () => characters[Math.floor(Math.random() * characters.length)];
             
-            // Scramble both words initially
             let newInsider = "";
             let newGuard = "";
             
-            // Build Insider text
             for (let i = 0; i < targetInsider.length; i++) {
                 if (i < insiderIndex) {
                     newInsider += targetInsider[i];
@@ -145,7 +195,6 @@ export default function LoginPage() {
                 }
             }
             
-            // Build Guard text
             for (let i = 0; i < targetGuard.length; i++) {
                 if (i < guardIndex) {
                     newGuard += targetGuard[i];
@@ -159,7 +208,6 @@ export default function LoginPage() {
             
             scrambleCount++;
             
-            // Every few scrambles, reveal the next letter
             if (scrambleCount % maxScrambles === 0) {
                 if (insiderIndex < targetInsider.length) {
                     insiderIndex++;
@@ -168,7 +216,6 @@ export default function LoginPage() {
                 }
             }
             
-            // Continue until both words are fully revealed
             if (insiderIndex >= targetInsider.length && guardIndex >= targetGuard.length) {
                 setDisplayInsider(targetInsider);
                 setDisplayGuard(targetGuard);
@@ -176,11 +223,9 @@ export default function LoginPage() {
                 return;
             }
             
-            // Continue scrambling
             setTimeout(scrambleText, scrambleSpeed);
         };
 
-        // Start the animation after a brief delay
         const startDelay = setTimeout(() => {
             scrambleText();
         }, 200);
@@ -195,7 +240,6 @@ export default function LoginPage() {
             <div className="max-w-lg w-full">
                 {/* Redesigned InsiderGuard Logo - Clean Typography with Scrambling Animation */}
                 <div className="text-left mb-4 relative">
-                    {/* Main Logo */}
                     <div className="group cursor-default">
                         <h1 className="text-7xl font-thin text-white drop-shadow-2xl leading-tight relative">
                             <span className="relative inline-block">
@@ -206,33 +250,29 @@ export default function LoginPage() {
                                     {displayGuard || "Guard"}
                                 </span>
                                 
-                                {/* Animated underline
-                                <div className="absolute -bottom-2 left-0 h-1 bg-gradient-to-r from-blue-400 via-sky-400 to-cyan-400 rounded-full transition-all duration-700 group-hover:w-full w-3/4"></div> */}
-                                
-                                {/* Subtle glow effect */}
                                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-sky-400/20 to-cyan-400/20 blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500 -z-10"></div>
                             </span>
                         </h1>
                     </div>
 
-                    {/* Decorative elements */}
                     <div className="absolute -top-4 -left-4 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
                     <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl"></div>
                 </div>
 
-                {/* Login Form Container - Unchanged */}
+                {/* Login Form Container */}
                 <div className="bg-gray-900 bg-opacity-70 backdrop-blur-md rounded-xl shadow-2xl p-8 border border-gray-700/50">
                     <form className="space-y-6" onSubmit={handleSubmit}>
+                        {/* Keep the original error display but make it less prominent when notifications are shown */}
                         {error && (
-                            <div className="bg-red-900 bg-opacity-50 border-l-4 border-red-500 p-4 rounded-md">
+                            <div className="bg-red-900 bg-opacity-30 border-l-4 border-red-500 p-3 rounded-md opacity-80">
                                 <div className="flex">
                                     <div className="flex-shrink-0">
-                                        <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <svg className="h-4 w-4 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                                         </svg>
                                     </div>
                                     <div className="ml-3">
-                                        <p className="text-sm text-red-300">{error}</p>
+                                        <p className="text-xs text-red-300">{error}</p>
                                     </div>
                                 </div>
                             </div>
@@ -279,7 +319,6 @@ export default function LoginPage() {
                                         className={`appearance-none block w-full px-0 py-2 border-0 border-b-2 ${
                                             emailError ? "border-red-500" : "border-gray-600"
                                         } bg-transparent placeholder-gray-400 text-gray-100 focus:outline-none focus:border-blue-400 transition-colors duration-200 text-sm`}
-                                        // placeholder="Enter your email address"
                                     />
                                 </div>
                                 {emailError && (
@@ -303,7 +342,6 @@ export default function LoginPage() {
                                         value={formData.password}
                                         onChange={handleChange}
                                         className="appearance-none block w-full px-0 py-2 pr-12 border-0 border-b-2 border-gray-600 bg-transparent placeholder-gray-400 text-gray-100 focus:outline-none focus:border-blue-400 transition-colors duration-200 text-sm"
-                                        // placeholder="Enter your password"
                                     />
                                     {formData.password && (
                                         <button
@@ -330,7 +368,7 @@ export default function LoginPage() {
                             </div>
                         </div>
 
-                        {/* Login Button with Blue Theme - Unchanged */}
+                        {/* Login Button with Blue Theme */}
                         <button
                             type="submit"
                             disabled={isLoading || !!emailError}
@@ -351,7 +389,7 @@ export default function LoginPage() {
                     </form>
                 </div>
 
-                {/* Bottom branding section - Unchanged */}
+                {/* Bottom branding section */}
                 <div className="mt-8 text-center">
                     <p className="text-sm text-gray-400 mb-4">POWERED BY</p>
                     <div className="flex justify-center">

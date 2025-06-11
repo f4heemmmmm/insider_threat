@@ -5,8 +5,9 @@ export interface Incident {
     user: string;
     windows_start: Date;
     windows_end: Date;
-    windows: string[];
     score: number;
+    windows: string[];
+    isClosed: boolean; 
     created_at: Date;
     updated_at: Date;
 }
