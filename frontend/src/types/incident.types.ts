@@ -1,13 +1,11 @@
-// frontend/src/types/incident.types.ts
-
 export interface Incident {
-    ID: string;
+    id: string;
     user: string;
     windows_start: Date;
     windows_end: Date;
     score: number;
     windows: string[];
-    isClosed: boolean; 
+    is_closed: boolean; 
     created_at: Date;
     updated_at: Date;
 }

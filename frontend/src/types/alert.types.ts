@@ -1,7 +1,5 @@
-// frontend/src/types/alert.types.ts
-
 export interface Alert {
-    ID: string;
+    id: string;
     user: string;
     datestr: Date;
     evidence: Record<string, any>;
@@ -12,8 +10,8 @@ export interface Alert {
     Logs: string | null;
     Detection_model: string;
     Description: string | null;
-    isUnderIncident: boolean;
-    incidentID?: string;
+    is_under_incident: boolean;
+    incident_id?: string;
     created_at: Date;
     updated_at: Date;
 }
